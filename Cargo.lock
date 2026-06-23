@@ -528,7 +528,6 @@ dependencies = [
  "rustc-demangle",
  "serde",
  "serde_json",
- "thiserror",
 ]
 
 [[package]]

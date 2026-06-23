@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use super::engine::SymbolDiff;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CrateGroup {
     pub name: String,
     pub delta: i64,

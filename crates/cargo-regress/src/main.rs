@@ -12,7 +12,7 @@ fn main() -> Result<()> {
     // We skip it so clap sees the actual args.
     let args: Vec<String> = {
         let mut a: Vec<String> = std::env::args().collect();
-        if a.get(1).map(|s| s.as_str()) == Some("regress") {
+        if a.get(1).map(String::as_str) == Some("regress") {
             a.remove(1);
         }
         a

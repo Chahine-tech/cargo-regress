@@ -4,7 +4,7 @@ use anyhow::Result;
 use cargo_metadata::MetadataCommand;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CrateDep {
     pub name: String,
     pub version: String,

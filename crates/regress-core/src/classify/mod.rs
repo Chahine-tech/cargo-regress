@@ -5,6 +5,7 @@ pub mod monomorph;
 use crate::diff::SymbolDiff;
 use serde::{Deserialize, Serialize};
 
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum BloatCategory {
     Monomorphization,

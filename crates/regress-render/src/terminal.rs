@@ -46,7 +46,7 @@ pub fn render_diff(diff: &BinaryDiff, from: &str, to: &str) {
         let category = group
             .symbols
             .first()
-            .map(|s| classify::classify(s))
+            .map(classify::classify)
             .unwrap_or(BloatCategory::Unknown);
 
         println!(

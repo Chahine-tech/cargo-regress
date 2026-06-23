@@ -21,7 +21,7 @@ impl SymbolDiff {
     }
 }
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct BinaryDiff {
     pub from_total: u64,
     pub to_total: u64,

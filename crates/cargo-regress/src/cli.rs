@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{Args, Parser, Subcommand, ValueEnum};
 
 #[derive(Parser)]
 #[command(
@@ -33,7 +33,7 @@ pub enum Command {
     },
 }
 
-#[derive(Parser, Clone)]
+#[derive(Args, Clone)]
 pub struct DiffArgs {
     /// Starting commit/tag/branch (default: HEAD~1)
     #[arg(long, default_value = "HEAD~1")]

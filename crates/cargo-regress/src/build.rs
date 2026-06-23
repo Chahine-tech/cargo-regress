@@ -39,8 +39,12 @@ impl Worktree {
                 .with_context(|| format!("Cannot remove old worktree: {}", path.display()))?;
         }
 
+        let path_str = path
+            .to_str()
+            .ok_or_else(|| anyhow::anyhow!("Non-UTF-8 path: {}", path.display()))?;
+
         let ok = Command::new("git")
-            .args(["worktree", "add", "--detach", path.to_str().unwrap(), commit_sha])
+            .args(["worktree", "add", "--detach", path_str, commit_sha])
             .current_dir(repo)
             .status()
             .context("Failed to run git worktree add")?
@@ -85,8 +89,10 @@ impl Worktree {
 
 impl Drop for Worktree {
     fn drop(&mut self) {
+        // Drop cannot propagate errors; best-effort cleanup.
+        let path_str = self.path.to_str().unwrap_or_default();
         let _ = Command::new("git")
-            .args(["worktree", "remove", "--force", self.path.to_str().unwrap()])
+            .args(["worktree", "remove", "--force", path_str])
             .current_dir(&self.repo)
             .status();
     }

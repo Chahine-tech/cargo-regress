@@ -2,14 +2,14 @@ use std::collections::HashMap;
 
 use crate::diff::SymbolDiff;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MonomorphGroup {
     pub base_name: String,
     pub instantiations: Vec<MonomorphInstance>,
     pub total_delta: i64,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MonomorphInstance {
     pub type_args: String,
     pub delta: i64,
