@@ -88,34 +88,30 @@ cargo-regress is organized as a Cargo workspace of three crates, each with a sin
 | `cargo-regress`   | CLI binary and git orchestration: worktree management, cargo build invocation, clap interface |
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        cargo regress (CLI)                              │
-│                                                                         │
-│  ┌──────────────┐   resolves commits, creates worktrees, invokes cargo  │
-│  │  build.rs    │──────────────────────────────────────┐                │
-│  └──────────────┘                                      │                │
-│                                                        ▼                │
-│  ┌─────────────────────────────────────────────────────────────────┐    │
-│  │                        regress-core                             │    │
-│  │                                                                 │    │
-│  │  ┌──────────┐  ┌───────────┐  ┌──────────┐  ┌───────────────┐  │    │
-│  │  │  binary  │  │   diff    │  │ classify │  │    suggest    │  │    │
-│  │  │ ELF      │  │ added     │  │ monomorph│  │ crate rules   │  │    │
-│  │  │ Mach-O   │→ │ removed   │→ │ hidden   │→ │ feature flags │  │    │
-│  │  │ PE       │  │ grown     │  │ derive   │  │ momo patterns │  │    │
-│  │  │ demangle │  │ shrunk    │  │ new dep  │  │               │  │    │
-│  │  └──────────┘  └─────┬─────┘  └──────────┘  └───────────────┘  │    │
-│  │                      │                                           │    │
-│  │               ┌──────┴──────┐                                    │    │
-│  │               │   causal    │  Cargo.lock diff, dep graph        │    │
-│  │               └─────────────┘                                    │    │
-│  └─────────────────────────────────────────────────────────────────┘    │
-│                                                                         │
-│  ┌─────────────────────────────────────────────────────────────────┐    │
-│  │                       regress-render                            │    │
-│  │          terminal (owo-colors)  ·  JSON  ·  GitHub Markdown     │    │
-│  └─────────────────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                      cargo-regress  (CLI)                        │
+│                                                                  │
+│  git worktrees  ·  cargo build  ·  clap CLI                      │
+└─────────────────────────────┬────────────────────────────────────┘
+                              │
+                              ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                         regress-core                             │
+│                                                                  │
+│  binary ──▶ diff ──▶ classify ──▶ suggest                        │
+│  ELF        added    monomorph    crate rules                    │
+│  Mach-O     removed  hidden       feature flags                  │
+│  PE         grown    derive                                      │
+│  demangle   shrunk   new dep                                     │
+│               │                                                  │
+│             causal  ─  Cargo.lock diff  ·  dep graph             │
+└─────────────────────────────┬────────────────────────────────────┘
+                              │
+                              ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                        regress-render                            │
+│      terminal (owo-colors)  ·  JSON  ·  GitHub Markdown          │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ### How the diff works
@@ -145,8 +141,8 @@ User                  cargo-regress              git                 cargo
   │                        │                      │                    │
   │                        │  parse ELF/Mach-O/PE symbols (object)     │
   │                        │  rustc-demangle → group by crate          │
-  │                        │  classify: monomorph / hidden / derive     │
-  │                        │  match suggest rules                       │
+  │                        │  classify: monomorph / hidden / derive    │
+  │                        │  match suggest rules                      │
   │                        │                      │                    │
   │  render output         │                      │                    │
   │←───────────────────────│                      │                    │
