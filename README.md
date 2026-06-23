@@ -332,4 +332,4 @@ Each classification carries a confidence score. `[monomorphization]` is high-con
 
 ## License
 
-Licensed under either of [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE) at your option.
+Licensed under either of [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE) at your option.
