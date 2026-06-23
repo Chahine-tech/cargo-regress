@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use crate::binary::SymbolEntry;
+use crate::binary::{crate_from_demangled, SymbolEntry};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SymbolDiff {
     pub name: String,
     pub demangled: String,
@@ -16,8 +16,7 @@ pub struct SymbolDiff {
 
 impl SymbolDiff {
     pub fn crate_name(&self) -> &str {
-        let s = self.demangled.trim_start_matches('<');
-        s.split("::").next().unwrap_or("unknown")
+        crate_from_demangled(&self.demangled)
     }
 }
 

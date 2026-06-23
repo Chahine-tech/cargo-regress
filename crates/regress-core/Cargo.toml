@@ -9,5 +9,4 @@ object.workspace = true
 rustc-demangle.workspace = true
 cargo_metadata.workspace = true
 serde.workspace = true
-serde_json.workspace = true
 anyhow.workspace = true

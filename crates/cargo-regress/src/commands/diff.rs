@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use anyhow::Result;
-use regress_core::{binary, diff as core_diff};
+use regress_core::{binary, diff};
 use regress_render::{github, json, terminal};
 
 use crate::build;
@@ -23,26 +23,26 @@ pub fn run(args: &DiffArgs, repo: &Path) -> Result<()> {
     let syms_from = binary::parse_symbols(&bin_from)?;
     let syms_to = binary::parse_symbols(&bin_to)?;
 
-    let diff = core_diff::compute_diff(&syms_from, &syms_to);
+    let result = diff::compute_diff(&syms_from, &syms_to);
 
     match args.format {
-        OutputFormat::Terminal => terminal::render_diff(&diff, &args.from, &args.to),
+        OutputFormat::Terminal => terminal::render_diff(&result, &args.from, &args.to),
         OutputFormat::Json => {
-            let out = json::render(&diff, &args.from, &args.to)?;
+            let out = json::render(&result, &args.from, &args.to)?;
             println!("{out}");
         }
         OutputFormat::Github => {
-            let out = github::render(&diff, &args.from, &args.to);
+            let out = github::render(&result, &args.from, &args.to);
             print!("{out}");
         }
     }
 
     if let Some(threshold) = &args.fail_on {
         let limit = parse_threshold(threshold)?;
-        if diff.total_delta() > limit {
+        if result.total_delta() > limit {
             eprintln!(
                 "Regression exceeds threshold ({} > {})",
-                diff.total_delta(),
+                result.total_delta(),
                 limit
             );
             std::process::exit(1);

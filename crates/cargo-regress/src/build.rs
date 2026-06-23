@@ -57,11 +57,6 @@ impl Worktree {
         Ok(Self { path, repo: repo.to_path_buf() })
     }
 
-    #[allow(dead_code)]
-    pub fn path(&self) -> &Path {
-        &self.path
-    }
-
     /// Run `cargo build --release` and return the path to the produced binary.
     pub fn build_release(&self, bin: Option<&str>, lib: bool) -> Result<PathBuf> {
         let mut cmd = Command::new("cargo");

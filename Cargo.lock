@@ -527,7 +527,6 @@ dependencies = [
  "object",
  "rustc-demangle",
  "serde",
- "serde_json",
 ]
 
 [[package]]

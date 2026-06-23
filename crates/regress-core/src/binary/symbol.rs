@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SymbolEntry {
     pub name: String,
     pub demangled: String,
@@ -16,12 +16,14 @@ impl SymbolEntry {
     }
 
     pub fn crate_name(&self) -> &str {
-        // Strip leading '<' (impl blocks, trait impls)
-        let s = self.demangled.trim_start_matches('<');
-        s.split("::").next().unwrap_or("unknown")
+        crate_from_demangled(&self.demangled)
     }
+}
 
-    pub fn is_in_section(&self, needle: &str) -> bool {
-        self.section.contains(needle)
-    }
+/// Extract the top-level crate name from a demangled symbol.
+/// e.g. `serde_json::de::Visitor` → `"serde_json"`
+/// e.g. `<Vec<u8> as core::fmt::Debug>::fmt` → `"Vec"`
+pub(crate) fn crate_from_demangled(demangled: &str) -> &str {
+    let s = demangled.trim_start_matches('<');
+    s.split("::").next().unwrap_or("unknown")
 }
