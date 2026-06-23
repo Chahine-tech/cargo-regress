@@ -1,8 +1,10 @@
 use anyhow::Result;
+use regress_core::causal::{CausalCause, CausalEntry};
 use regress_core::classify::{self, BloatCategory};
 use regress_core::diff::{group_by_crate, BinaryDiff};
 use regress_core::suggest;
 use serde::Serialize;
+use std::collections::HashMap;
 
 #[derive(Serialize)]
 pub struct DiffReport<'a> {
@@ -20,13 +22,27 @@ pub struct RegressionEntry {
     pub crate_name: String,
     pub delta_bytes: i64,
     pub category: String,
+    pub cause: Option<CauseJson>,
+    pub import_path: Vec<String>,
+    pub active_features: Vec<String>,
     pub symbols: Vec<String>,
     pub suggestions: Vec<String>,
 }
 
-pub fn render(diff: &BinaryDiff, from: &str, to: &str) -> Result<String> {
+#[derive(Serialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum CauseJson {
+    NewDependency { version: String },
+    VersionBump { from: String, to: String },
+    SymbolGrowth,
+}
+
+pub fn render(diff: &BinaryDiff, causal: &[CausalEntry], from: &str, to: &str) -> Result<String> {
     let growing: Vec<_> = diff.all_growing().cloned().collect();
     let groups = group_by_crate(&growing);
+
+    let causal_map: HashMap<&str, &CausalEntry> =
+        causal.iter().map(|e| (e.crate_name.as_str(), e)).collect();
 
     let regressions = groups
         .iter()
@@ -44,10 +60,30 @@ pub fn render(diff: &BinaryDiff, from: &str, to: &str) -> Result<String> {
             let suggestions: Vec<String> =
                 suggest::for_crate(&group.name).into_iter().map(|s| s.text).collect();
 
+            let (cause, import_path, active_features) =
+                if let Some(entry) = causal_map.get(group.name.as_str()) {
+                    let cause = match &entry.cause {
+                        CausalCause::NewDependency { version } => {
+                            Some(CauseJson::NewDependency { version: version.clone() })
+                        }
+                        CausalCause::VersionBump { from, to } => {
+                            Some(CauseJson::VersionBump { from: from.clone(), to: to.clone() })
+                        }
+                        CausalCause::SymbolGrowth => Some(CauseJson::SymbolGrowth),
+                        _ => None,
+                    };
+                    (cause, entry.import_path.clone(), entry.active_features.clone())
+                } else {
+                    (None, vec![], vec![])
+                };
+
             RegressionEntry {
                 crate_name: group.name.clone(),
                 delta_bytes: group.delta,
                 category,
+                cause,
+                import_path,
+                active_features,
                 symbols,
                 suggestions,
             }

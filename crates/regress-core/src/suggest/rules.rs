@@ -52,3 +52,27 @@ pub fn for_monomorph(group: &MonomorphGroup) -> Vec<Suggestion> {
         ),
     ]
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn regex_has_suggestion_with_savings() {
+        let s = for_crate("regex");
+        assert!(!s.is_empty());
+        assert!(s[0].estimated_savings_bytes.is_some());
+        assert!(s[0].text.contains("default-features"));
+    }
+
+    #[test]
+    fn serde_has_suggestion() {
+        assert!(!for_crate("serde").is_empty());
+        assert!(!for_crate("serde_json").is_empty());
+    }
+
+    #[test]
+    fn unknown_crate_has_no_suggestion() {
+        assert!(for_crate("nonexistent_crate_xyz").is_empty());
+    }
+}

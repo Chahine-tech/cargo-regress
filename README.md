@@ -61,7 +61,9 @@ TOP REGRESSIONS
            → Consider miniserde for simpler types
 
   +143 KB  regex       [new dependency]
-           └─ introduced via some_lib@0.4.2 → regex@1.11.0
+           ● new dependency (1.11.0)
+           └─ import path: your_crate → some_lib → regex
+           └─ features: [unicode, perf]
            → Disable unicode: default-features = false, features = ["std"]
               Estimated saving: 140 KB
 
@@ -245,11 +247,19 @@ Each classification carries a confidence score. `[monomorphization]` is high-con
   "total_delta_pct": 20.6,
   "regressions": [
     {
-      "crate_name": "serde_json",
-      "delta_bytes": 191488,
-      "category": "monomorphization",
-      "symbols": ["serde_json::de::..."],
-      "suggestions": ["Consider miniserde for simpler types"]
+      "crate_name": "regex",
+      "delta_bytes": 143360,
+      "category": "unknown",
+      "cause": {
+        "type": "new_dependency",
+        "version": "1.11.0"
+      },
+      "import_path": ["your_crate", "some_lib", "regex"],
+      "active_features": ["unicode", "perf"],
+      "symbols": ["regex::find::...", "regex::compile::..."],
+      "suggestions": [
+        "Disable unicode feature: regex = { version = \"...\", default-features = false, features = [\"std\"] }"
+      ]
     }
   ]
 }
@@ -284,7 +294,7 @@ Each classification carries a confidence score. `[monomorphization]` is high-con
 
 ## Roadmap
 
-### v0.1 — MVP (current)
+### v0.1 — MVP ✓
 - [x] ELF / Mach-O / PE parsing via `object`
 - [x] Symbol diff: added, removed, grown, shrunk
 - [x] Grouping by crate (via rustc-demangle)
@@ -294,13 +304,13 @@ Each classification carries a confidence score. `[monomorphization]` is high-con
 - [x] `--fail-on` threshold with exit code 1
 - [x] Integration test fixtures (bloat-mono, bloat-derive, bloat-dep)
 
-### v0.2 — Causal attribution
-- [ ] `cargo_metadata` integration for full dependency graph
-- [ ] `Cargo.lock` diff between two commits
-- [ ] Symbol → crate → import chain attribution
-- [ ] Detect expensive Cargo features enabled transitively
+### v0.2 — Causal attribution ✓
+- [x] `cargo_metadata` integration for full dependency graph
+- [x] `Cargo.lock` diff between two commits
+- [x] Symbol → crate → import chain attribution
+- [x] Detect expensive Cargo features enabled transitively
 
-### v0.3 — Classification & suggestions
+### v0.3 — Classification & suggestions (current)
 - [ ] Full monomorphization classifier (N-instantiation grouping)
 - [ ] Hidden data classifier (`.rodata`, panic strings, vtables)
 - [ ] Derive support code classifier

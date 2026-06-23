@@ -11,6 +11,10 @@ fn workspace_root() -> PathBuf {
         .to_path_buf()
 }
 
+fn fixture(name: &str) -> PathBuf {
+    workspace_root().join("tests/fixtures").join(name)
+}
+
 fn build_fixture(name: &str) -> PathBuf {
     let path = workspace_root().join("tests/fixtures").join(name);
     let status = Command::new("cargo")
@@ -20,6 +24,26 @@ fn build_fixture(name: &str) -> PathBuf {
         .expect("failed to invoke cargo");
     assert!(status.success(), "cargo build failed for fixture '{name}'");
     path.join("target/release").join(name)
+}
+
+#[test]
+fn dep_graph_finds_regex_in_bloat_dep() {
+    let manifest = fixture("bloat-dep").join("Cargo.toml");
+    let graph = regress_core::causal::DepGraph::from_manifest(&manifest)
+        .expect("dep graph failed");
+
+    let path = graph.path_to("regex").expect("regex not found in graph");
+    // path should be ["bloat-dep", "regex"]
+    assert_eq!(path.first().map(String::as_str), Some("bloat-dep"));
+    assert_eq!(path.last().map(String::as_str), Some("regex"));
+}
+
+#[test]
+fn dep_graph_unknown_crate_returns_none() {
+    let manifest = fixture("bloat-dep").join("Cargo.toml");
+    let graph = regress_core::causal::DepGraph::from_manifest(&manifest)
+        .expect("dep graph failed");
+    assert!(graph.path_to("this_crate_does_not_exist").is_none());
 }
 
 #[test]

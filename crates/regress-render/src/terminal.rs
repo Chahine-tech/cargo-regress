@@ -1,13 +1,15 @@
+use std::collections::HashMap;
+
 use owo_colors::OwoColorize;
+use regress_core::causal::{CausalCause, CausalEntry};
 use regress_core::classify::{self, BloatCategory};
 use regress_core::diff::{group_by_crate, BinaryDiff};
 use regress_core::suggest;
 
-pub fn render_diff(diff: &BinaryDiff, from: &str, to: &str) {
+pub fn render_diff(diff: &BinaryDiff, causal: &[CausalEntry], from: &str, to: &str) {
     let delta = diff.total_delta();
     let pct = diff.total_delta_pct();
 
-    // Header line
     if delta > 0 {
         println!(
             "{}",
@@ -38,17 +40,18 @@ pub fn render_diff(diff: &BinaryDiff, from: &str, to: &str) {
     println!("{}", "TOP REGRESSIONS".bold());
     println!("{}", "━".repeat(60).dimmed());
 
+    let causal_map: HashMap<&str, &CausalEntry> =
+        causal.iter().map(|e| (e.crate_name.as_str(), e)).collect();
+
     let groups = group_by_crate(&growing);
     for group in groups.iter().take(10) {
-        let delta_str = format!("+{}", fmt_bytes(group.delta));
-
-        // Classify the dominant symbol in the group
         let category = group
             .symbols
             .first()
             .map(classify::classify)
             .unwrap_or(BloatCategory::Unknown);
 
+        let delta_str = format!("+{}", fmt_bytes(group.delta));
         println!(
             "  {}  {}  {}",
             delta_str.red().bold(),
@@ -56,24 +59,62 @@ pub fn render_diff(diff: &BinaryDiff, from: &str, to: &str) {
             format!("[{}]", category).dimmed()
         );
 
+        // Causal block
+        if let Some(entry) = causal_map.get(group.name.as_str()) {
+            match &entry.cause {
+                CausalCause::NewDependency { version } => {
+                    println!(
+                        "     {} new dependency ({})",
+                        "●".yellow(),
+                        version.dimmed()
+                    );
+                }
+                CausalCause::VersionBump { from, to } => {
+                    println!(
+                        "     {} version bump {} → {}",
+                        "●".cyan(),
+                        from.dimmed(),
+                        to.dimmed()
+                    );
+                }
+                CausalCause::SymbolGrowth => {}
+                _ => {}
+            }
+
+            if entry.import_path.len() > 1 {
+                println!(
+                    "     {} import path: {}",
+                    "└─".dimmed(),
+                    entry.import_path.join(" → ").dimmed()
+                );
+            }
+
+            if !entry.active_features.is_empty() {
+                println!(
+                    "     {} features: [{}]",
+                    "└─".dimmed(),
+                    entry.active_features.join(", ").dimmed()
+                );
+            }
+        }
+
+        // Top symbols
         for sym in group.symbols.iter().take(3) {
             println!("     {} {}", "└─".dimmed(), sym.demangled.dimmed());
         }
         if group.symbols.len() > 3 {
             println!(
-                "     {}   … and {} more symbols",
-                " ".dimmed(),
+                "        … and {} more symbols",
                 group.symbols.len() - 3
             );
         }
 
-        // Actionable suggestions
+        // Suggestions
         for s in suggest::for_crate(&group.name) {
             println!("     {} {}", "→".yellow(), s.text.yellow());
             if let Some(savings) = s.estimated_savings_bytes {
                 println!(
-                    "       {} Estimated saving: {}",
-                    " ".dimmed(),
+                    "       Estimated saving: {}",
                     fmt_bytes(savings).green()
                 );
             }
@@ -82,10 +123,8 @@ pub fn render_diff(diff: &BinaryDiff, from: &str, to: &str) {
         println!();
     }
 
-    let shrink_total: u64 = diff
-        .all_shrinking()
-        .map(|s| s.delta.unsigned_abs())
-        .sum();
+    let shrink_total: u64 =
+        diff.all_shrinking().map(|s| s.delta.unsigned_abs()).sum();
 
     if shrink_total > 0 {
         println!(
