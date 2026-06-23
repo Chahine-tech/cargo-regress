@@ -1,0 +1,17 @@
+[package]
+name = "cargo-regress"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Binary size regression analysis for Rust projects"
+
+[[bin]]
+name = "cargo-regress"
+path = "src/main.rs"
+
+[dependencies]
+regress-core.workspace = true
+regress-render.workspace = true
+clap.workspace = true
+git2.workspace = true
+anyhow.workspace = true

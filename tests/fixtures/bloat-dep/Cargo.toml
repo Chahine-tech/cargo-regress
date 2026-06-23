@@ -1,0 +1,8 @@
+[package]
+name = "bloat-dep"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# regex with default features pulls ~140 KB of unicode tables
+regex = "1"
