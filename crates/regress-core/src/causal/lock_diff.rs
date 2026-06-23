@@ -69,3 +69,54 @@ pub fn diff(from_lock: &str, to_lock: &str) -> LockDiff {
 
     LockDiff { added, removed, updated }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const LOCK_A: &str = r#"
+[[package]]
+name = "foo"
+version = "1.0.0"
+
+[[package]]
+name = "bar"
+version = "0.2.0"
+"#;
+
+    const LOCK_B: &str = r#"
+[[package]]
+name = "foo"
+version = "1.0.0"
+
+[[package]]
+name = "bar"
+version = "0.3.0"
+
+[[package]]
+name = "baz"
+version = "1.0.0"
+"#;
+
+    #[test]
+    fn detects_added_package() {
+        let d = diff(LOCK_A, LOCK_B);
+        assert!(d.added.iter().any(|s| s.contains("baz")));
+    }
+
+    #[test]
+    fn detects_version_bump() {
+        let d = diff(LOCK_A, LOCK_B);
+        assert!(d.updated.iter().any(|(name, from, to)| {
+            name == "bar" && from == "0.2.0" && to == "0.3.0"
+        }));
+    }
+
+    #[test]
+    fn no_diff_on_identical_locks() {
+        let d = diff(LOCK_A, LOCK_A);
+        assert!(d.added.is_empty());
+        assert!(d.removed.is_empty());
+        assert!(d.updated.is_empty());
+    }
+}

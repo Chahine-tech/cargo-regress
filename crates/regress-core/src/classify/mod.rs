@@ -42,3 +42,37 @@ pub fn classify(sym: &SymbolDiff) -> BloatCategory {
     }
     BloatCategory::Unknown
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn sym_diff(demangled: &str, section: &str) -> SymbolDiff {
+        SymbolDiff {
+            name: demangled.to_string(),
+            demangled: demangled.to_string(),
+            section: section.to_string(),
+            size_before: 0,
+            size_after: 100,
+            delta: 100,
+        }
+    }
+
+    #[test]
+    fn fmt_debug_is_derive_support() {
+        let s = sym_diff("serde_json::_::_::fmt::Debug", ".text");
+        assert_eq!(classify(&s), BloatCategory::DeriveSupport);
+    }
+
+    #[test]
+    fn rodata_symbol_is_hidden_data() {
+        let s = sym_diff("some_static_string", "__rodata");
+        assert_eq!(classify(&s), BloatCategory::HiddenData);
+    }
+
+    #[test]
+    fn generic_symbol_is_monomorphization() {
+        let s = sym_diff("alloc::vec::Vec<MyStruct>::retain", ".text");
+        assert_eq!(classify(&s), BloatCategory::Monomorphization);
+    }
+}

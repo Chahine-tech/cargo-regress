@@ -115,3 +115,57 @@ pub fn compute_diff(from: &[SymbolEntry], to: &[SymbolEntry]) -> BinaryDiff {
 
     diff
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn sym(name: &str, size: u64) -> SymbolEntry {
+        SymbolEntry::new(name.to_string(), size, ".text".to_string(), 0)
+    }
+
+    #[test]
+    fn identical_slices_produce_empty_diff() {
+        let syms = vec![sym("_ZN3foo3barE", 100), sym("_ZN3baz4quuxE", 200)];
+        let d = compute_diff(&syms, &syms);
+        assert_eq!(d.total_delta(), 0);
+        assert!(d.added.is_empty());
+        assert!(d.removed.is_empty());
+        assert!(d.grown.is_empty());
+        assert!(d.shrunk.is_empty());
+    }
+
+    #[test]
+    fn added_symbol_shows_positive_delta() {
+        let from = vec![sym("_ZN3fooE", 100)];
+        let to = vec![sym("_ZN3fooE", 100), sym("_ZN3barE", 50)];
+        let d = compute_diff(&from, &to);
+        assert_eq!(d.total_delta(), 50);
+        assert_eq!(d.added.len(), 1);
+        assert_eq!(d.added[0].delta, 50);
+    }
+
+    #[test]
+    fn removed_symbol_shows_negative_delta() {
+        let from = vec![sym("_ZN3fooE", 100), sym("_ZN3barE", 40)];
+        let to = vec![sym("_ZN3fooE", 100)];
+        let d = compute_diff(&from, &to);
+        assert_eq!(d.total_delta(), -40);
+        assert_eq!(d.removed.len(), 1);
+    }
+
+    #[test]
+    fn grown_symbol_detected() {
+        let from = vec![sym("_ZN3fooE", 100)];
+        let to = vec![sym("_ZN3fooE", 160)];
+        let d = compute_diff(&from, &to);
+        assert_eq!(d.grown.len(), 1);
+        assert_eq!(d.grown[0].delta, 60);
+    }
+
+    #[test]
+    fn total_delta_pct_is_zero_on_empty_from() {
+        let d = BinaryDiff::default();
+        assert_eq!(d.total_delta_pct(), 0.0);
+    }
+}

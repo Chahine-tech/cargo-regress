@@ -1,7 +1,9 @@
 [package]
 name = "bloat-dep"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
+
+[workspace]
 
 [dependencies]
 # regex with default features pulls ~140 KB of unicode tables
