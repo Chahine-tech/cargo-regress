@@ -34,7 +34,7 @@ pub fn render(diff: &BinaryDiff, from: &str, to: &str) -> Result<String> {
             let category = group
                 .symbols
                 .first()
-                .map(|s| classify::classify(s))
+                .map(classify::classify)
                 .unwrap_or(BloatCategory::Unknown)
                 .to_string();
 
