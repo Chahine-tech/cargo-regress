@@ -136,9 +136,14 @@ mod tests {
 
     #[test]
     fn new_crates_have_suggestions() {
-        for crate_name in &["hyper", "axum", "image", "reqwest", "openssl", "tracing", "chrono", "diesel", "sqlx"] {
+        for crate_name in &[
+            "hyper", "axum", "image", "reqwest", "openssl", "tracing", "chrono", "diesel", "sqlx",
+        ] {
             let s = for_crate(crate_name);
-            assert!(!s.is_empty(), "Expected suggestion for crate `{crate_name}`");
+            assert!(
+                !s.is_empty(),
+                "Expected suggestion for crate `{crate_name}`"
+            );
         }
     }
 

@@ -79,7 +79,8 @@ mod tests {
     fn gitlab_is_valid_json_array() {
         let diff = make_test_diff();
         let out = render(&diff, &[]).unwrap();
-        let v: serde_json::Value = serde_json::from_str(&out).expect("GitLab output must be valid JSON");
+        let v: serde_json::Value =
+            serde_json::from_str(&out).expect("GitLab output must be valid JSON");
         assert!(v.is_array());
     }
 
@@ -90,7 +91,12 @@ mod tests {
         let v: serde_json::Value = serde_json::from_str(&out).unwrap();
         let issues = v.as_array().unwrap();
         assert!(!issues.is_empty());
-        assert!(issues[0]["fingerprint"].as_str().unwrap().starts_with("binary-size:"));
+        assert!(
+            issues[0]["fingerprint"]
+                .as_str()
+                .unwrap()
+                .starts_with("binary-size:")
+        );
         assert!(["critical", "major", "minor"].contains(&issues[0]["severity"].as_str().unwrap()));
     }
 

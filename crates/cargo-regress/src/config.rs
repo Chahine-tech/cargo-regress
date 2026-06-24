@@ -90,9 +90,11 @@ mod tests {
 
     #[test]
     fn config_sets_bin() {
-        let cfg = Config::from_str(r#"[defaults]
+        let cfg = Config::from_str(
+            r#"[defaults]
 bin = "my-app"
-"#);
+"#,
+        );
         let mut args = default_diff_args();
         cfg.apply_to_diff(&mut args);
         assert_eq!(args.bin.as_deref(), Some("my-app"));
@@ -100,9 +102,11 @@ bin = "my-app"
 
     #[test]
     fn config_sets_format_json() {
-        let cfg = Config::from_str(r#"[defaults]
+        let cfg = Config::from_str(
+            r#"[defaults]
 format = "json"
-"#);
+"#,
+        );
         let mut args = default_diff_args();
         cfg.apply_to_diff(&mut args);
         assert!(matches!(args.format, OutputFormat::Json));
@@ -110,9 +114,11 @@ format = "json"
 
     #[test]
     fn config_sets_fail_on_bytes() {
-        let cfg = Config::from_str(r#"[defaults]
+        let cfg = Config::from_str(
+            r#"[defaults]
 fail_on_bytes = 50000
-"#);
+"#,
+        );
         let mut args = default_diff_args();
         cfg.apply_to_diff(&mut args);
         assert_eq!(args.fail_on.as_deref(), Some("50000"));
@@ -120,9 +126,11 @@ fail_on_bytes = 50000
 
     #[test]
     fn cli_bin_overrides_config() {
-        let cfg = Config::from_str(r#"[defaults]
+        let cfg = Config::from_str(
+            r#"[defaults]
 bin = "from-config"
-"#);
+"#,
+        );
         let mut args = default_diff_args();
         args.bin = Some("from-cli".to_string());
         cfg.apply_to_diff(&mut args);
@@ -131,9 +139,11 @@ bin = "from-config"
 
     #[test]
     fn zero_fail_on_bytes_not_applied() {
-        let cfg = Config::from_str(r#"[defaults]
+        let cfg = Config::from_str(
+            r#"[defaults]
 fail_on_bytes = 0
-"#);
+"#,
+        );
         let mut args = default_diff_args();
         cfg.apply_to_diff(&mut args);
         assert!(args.fail_on.is_none());
@@ -141,9 +151,11 @@ fail_on_bytes = 0
 
     #[test]
     fn unknown_format_falls_back_to_terminal() {
-        let cfg = Config::from_str(r#"[defaults]
+        let cfg = Config::from_str(
+            r#"[defaults]
 format = "unknown_format"
-"#);
+"#,
+        );
         let mut args = default_diff_args();
         cfg.apply_to_diff(&mut args);
         assert!(matches!(args.format, OutputFormat::Terminal));
