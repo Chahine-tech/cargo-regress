@@ -7,7 +7,7 @@ use regress_core::causal::CausalCause;
 use regress_core::classify::{self, BloatCategory};
 use regress_core::diff::group_by_crate;
 use regress_core::suggest;
-use regress_core::{binary, diff, CausalEntry};
+use regress_core::{CausalEntry, binary, diff};
 
 use crate::build;
 use crate::cli::DiffArgs;
@@ -50,12 +50,19 @@ pub fn run(symbol: &str, args: &DiffArgs, repo: &Path) -> Result<()> {
         return Ok(());
     }
 
-    let causal_map: HashMap<&str, &CausalEntry> =
-        causal_entries.iter().map(|e| (e.crate_name.as_str(), e)).collect();
+    let causal_map: HashMap<&str, &CausalEntry> = causal_entries
+        .iter()
+        .map(|e| (e.crate_name.as_str(), e))
+        .collect();
 
     println!();
     println!("{} {}", "Explaining:".bold(), symbol.yellow());
-    println!("{} {} → {}", "Commits:".dimmed(), args.from.dimmed(), args.to.dimmed());
+    println!(
+        "{} {} → {}",
+        "Commits:".dimmed(),
+        args.from.dimmed(),
+        args.to.dimmed()
+    );
     println!("{}", "─".repeat(60).dimmed());
 
     let groups = group_by_crate(&growing);
@@ -108,7 +115,12 @@ pub fn run(symbol: &str, args: &DiffArgs, repo: &Path) -> Result<()> {
         println!();
         println!("{}", "Symbols:".bold());
         for sym in &group.symbols {
-            println!("  {} {} (+{})", "│".dimmed(), sym.demangled, fmt_bytes(sym.delta));
+            println!(
+                "  {} {} (+{})",
+                "│".dimmed(),
+                sym.demangled,
+                fmt_bytes(sym.delta)
+            );
         }
         println!();
 
@@ -122,7 +134,9 @@ pub fn run(symbol: &str, args: &DiffArgs, repo: &Path) -> Result<()> {
         };
 
         if let Some(ref mono) = result.mono_group {
-            for s in suggest::for_monomorph(&mono.base_name, mono.instantiation_count, mono.total_delta) {
+            for s in
+                suggest::for_monomorph(&mono.base_name, mono.instantiation_count, mono.total_delta)
+            {
                 print_header(&mut printed_header);
                 println!("  {} {}", "→".yellow(), s.text);
                 if let Some(saving) = s.estimated_savings_bytes {

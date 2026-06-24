@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use crate::binary::{crate_from_demangled, SymbolEntry};
+use crate::binary::{SymbolEntry, crate_from_demangled};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SymbolDiff {
@@ -52,15 +52,17 @@ impl BinaryDiff {
 }
 
 pub fn compute_diff(from: &[SymbolEntry], to: &[SymbolEntry]) -> BinaryDiff {
-    let from_map: HashMap<&str, &SymbolEntry> =
-        from.iter().map(|s| (s.name.as_str(), s)).collect();
-    let to_map: HashMap<&str, &SymbolEntry> =
-        to.iter().map(|s| (s.name.as_str(), s)).collect();
+    let from_map: HashMap<&str, &SymbolEntry> = from.iter().map(|s| (s.name.as_str(), s)).collect();
+    let to_map: HashMap<&str, &SymbolEntry> = to.iter().map(|s| (s.name.as_str(), s)).collect();
 
     let from_total: u64 = from.iter().map(|s| s.size).sum();
     let to_total: u64 = to.iter().map(|s| s.size).sum();
 
-    let mut diff = BinaryDiff { from_total, to_total, ..Default::default() };
+    let mut diff = BinaryDiff {
+        from_total,
+        to_total,
+        ..Default::default()
+    };
 
     for (name, sym) in &to_map {
         if !from_map.contains_key(name) {

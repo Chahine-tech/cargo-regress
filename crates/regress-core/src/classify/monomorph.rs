@@ -40,7 +40,11 @@ pub fn detect(symbols: &[SymbolDiff]) -> Vec<MonomorphGroup> {
                     delta: s.delta,
                 })
                 .collect();
-            Some(MonomorphGroup { base_name, instantiations, total_delta })
+            Some(MonomorphGroup {
+                base_name,
+                instantiations,
+                total_delta,
+            })
         })
         .collect();
 
@@ -66,5 +70,8 @@ fn strip_type_params(demangled: &str) -> String {
 }
 
 fn extract_type_args(demangled: &str) -> String {
-    demangled.find('<').map(|i| demangled[i..].to_string()).unwrap_or_default()
+    demangled
+        .find('<')
+        .map(|i| demangled[i..].to_string())
+        .unwrap_or_default()
 }

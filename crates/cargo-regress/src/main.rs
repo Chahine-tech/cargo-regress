@@ -22,14 +22,10 @@ fn main() -> Result<()> {
     let repo = build::find_repo_root()?;
 
     match cli.command {
-        Some(Command::Explain { symbol }) => {
-            commands::explain::run(&symbol, &cli.diff, &repo)?
-        }
+        Some(Command::Explain { symbol }) => commands::explain::run(&symbol, &cli.diff, &repo)?,
         Some(Command::Tui) => commands::tui::run(&cli.diff, &repo)?,
         Some(Command::Watch { watch }) => commands::watch::run(&watch, &repo)?,
-        Some(Command::Snapshot { snapshot }) => {
-            commands::snapshot::run(&snapshot, &repo)?
-        }
+        Some(Command::Snapshot { snapshot }) => commands::snapshot::run(&snapshot, &repo)?,
         None => commands::diff::run(&cli.diff, &repo)?,
     }
 

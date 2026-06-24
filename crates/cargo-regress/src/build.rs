@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use git2::Repository;
 
 /// Resolve a git ref spec to a full 40-char SHA.
@@ -15,8 +15,7 @@ pub fn resolve_commit(repo_path: &Path, spec: &str) -> Result<String> {
 
 /// Find the root of the git repository (workdir path).
 pub fn find_repo_root() -> Result<PathBuf> {
-    let repo = Repository::discover(".")
-        .context("Not inside a git repository")?;
+    let repo = Repository::discover(".").context("Not inside a git repository")?;
     repo.workdir()
         .map(|p| p.to_path_buf())
         .context("Bare repositories are not supported")
@@ -54,7 +53,10 @@ impl Worktree {
             bail!("git worktree add failed for commit {commit_sha}");
         }
 
-        Ok(Self { path, repo: repo.to_path_buf() })
+        Ok(Self {
+            path,
+            repo: repo.to_path_buf(),
+        })
     }
 
     /// Root directory of this worktree (contains Cargo.toml and Cargo.lock).
@@ -68,8 +70,12 @@ impl Worktree {
         cmd.args(["build", "--release"]);
 
         match (bin, lib) {
-            (Some(b), _) => { cmd.args(["--bin", b]); }
-            (None, true) => { cmd.arg("--lib"); }
+            (Some(b), _) => {
+                cmd.args(["--bin", b]);
+            }
+            (None, true) => {
+                cmd.arg("--lib");
+            }
             _ => {}
         }
 
@@ -116,11 +122,7 @@ fn find_binary(dir: &Path, hint: Option<&str>) -> Result<PathBuf> {
         .filter_map(|e| e.ok())
         .filter(|e| {
             let p = e.path();
-            p.is_file()
-                && matches!(
-                    p.extension().and_then(|x| x.to_str()),
-                    None | Some("exe")
-                )
+            p.is_file() && matches!(p.extension().and_then(|x| x.to_str()), None | Some("exe"))
         })
         .filter_map(|e| Some((e.path(), e.metadata().ok()?.len())))
         .collect();

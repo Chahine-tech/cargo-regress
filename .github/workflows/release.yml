@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Verify version matches tag
+        shell: bash
+        run: |
+          CARGO_VERSION="v$(cargo metadata --no-deps --format-version 1 \
+            | jq -r '.packages[] | select(.name == "cargo-regress") | .version')"
+          GIT_TAG="${GITHUB_REF_NAME}"
+          if [ "$CARGO_VERSION" != "$GIT_TAG" ]; then
+            echo "Version mismatch: Cargo.toml=$CARGO_VERSION tag=$GIT_TAG"
+            exit 1
+          fi
+
+      - name: Publish regress-core
+        run: cargo publish -p regress-core --locked
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Wait for regress-core to be indexed
+        run: sleep 30
+
+      - name: Publish regress-render
+        run: cargo publish -p regress-render --locked
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Wait for regress-render to be indexed
+        run: sleep 30
+
+      - name: Publish cargo-regress
+        run: cargo publish -p cargo-regress --locked
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true

@@ -49,7 +49,12 @@ impl DepGraph {
             .cloned()
             .collect();
 
-        Ok(Self { roots, id_to_name, adjacency, name_to_features })
+        Ok(Self {
+            roots,
+            id_to_name,
+            adjacency,
+            name_to_features,
+        })
     }
 
     /// BFS from workspace roots to `target_name`. Returns the first path found,
@@ -86,7 +91,9 @@ impl DepGraph {
                 return Some(path);
             }
 
-            let Some(deps) = self.adjacency.get(&id) else { continue };
+            let Some(deps) = self.adjacency.get(&id) else {
+                continue;
+            };
 
             for dep_id in deps {
                 if visited.insert(dep_id.clone()) {
@@ -126,14 +133,20 @@ impl DepGraph {
             adjacency.insert(name.to_string(), ds.iter().map(|s| s.to_string()).collect());
         }
         for root in &roots {
-            id_to_name.entry(root.clone()).or_insert_with(|| root.clone());
+            id_to_name
+                .entry(root.clone())
+                .or_insert_with(|| root.clone());
         }
         for (name, fs) in features {
-            name_to_features
-                .insert(name.to_string(), fs.iter().map(|s| s.to_string()).collect());
+            name_to_features.insert(name.to_string(), fs.iter().map(|s| s.to_string()).collect());
         }
 
-        Self { roots, id_to_name, adjacency, name_to_features }
+        Self {
+            roots,
+            id_to_name,
+            adjacency,
+            name_to_features,
+        }
     }
 }
 
@@ -159,7 +172,10 @@ mod tests {
     #[test]
     fn path_to_direct_dep() {
         let g = simple_graph();
-        assert_eq!(g.path_to("lib-a"), Some(vec!["my-app".into(), "lib-a".into()]));
+        assert_eq!(
+            g.path_to("lib-a"),
+            Some(vec!["my-app".into(), "lib-a".into()])
+        );
     }
 
     #[test]

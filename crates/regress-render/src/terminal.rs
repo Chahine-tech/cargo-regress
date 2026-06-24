@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use owo_colors::OwoColorize;
 use regress_core::causal::{CausalCause, CausalEntry};
 use regress_core::classify::{self, BloatCategory};
-use regress_core::diff::{group_by_crate, BinaryDiff};
+use regress_core::diff::{BinaryDiff, group_by_crate};
 use regress_core::suggest;
 
 pub fn render_diff(diff: &BinaryDiff, causal: &[CausalEntry], from: &str, to: &str) {
@@ -13,16 +13,24 @@ pub fn render_diff(diff: &BinaryDiff, causal: &[CausalEntry], from: &str, to: &s
     if delta > 0 {
         println!(
             "{}",
-            format!("Binary size regression: +{} (+{:.1}%)", fmt_bytes(delta), pct)
-                .red()
-                .bold()
+            format!(
+                "Binary size regression: +{} (+{:.1}%)",
+                fmt_bytes(delta),
+                pct
+            )
+            .red()
+            .bold()
         );
     } else if delta < 0 {
         println!(
             "{}",
-            format!("Binary size improvement: {} ({:.1}%)", fmt_bytes(delta), pct)
-                .green()
-                .bold()
+            format!(
+                "Binary size improvement: {} ({:.1}%)",
+                fmt_bytes(delta),
+                pct
+            )
+            .green()
+            .bold()
         );
     } else {
         println!("{}", "Binary size unchanged".dimmed());
@@ -58,7 +66,11 @@ pub fn render_diff(diff: &BinaryDiff, causal: &[CausalEntry], from: &str, to: &s
         if let Some(e) = entry {
             match &e.cause {
                 CausalCause::NewDependency { version } => {
-                    println!("     {} new dependency ({})", "●".yellow(), version.dimmed());
+                    println!(
+                        "     {} new dependency ({})",
+                        "●".yellow(),
+                        version.dimmed()
+                    );
                 }
                 CausalCause::VersionBump { from, to } => {
                     println!(
@@ -108,7 +120,9 @@ pub fn render_diff(diff: &BinaryDiff, causal: &[CausalEntry], from: &str, to: &s
 
         // Suggestions
         if let Some(ref mono) = result.mono_group {
-            for s in suggest::for_monomorph(&mono.base_name, mono.instantiation_count, mono.total_delta) {
+            for s in
+                suggest::for_monomorph(&mono.base_name, mono.instantiation_count, mono.total_delta)
+            {
                 print_suggestion(&s);
             }
         }
@@ -149,7 +163,10 @@ pub fn render_diff(diff: &BinaryDiff, causal: &[CausalEntry], from: &str, to: &s
         println!();
     }
 
-    println!("{}", "Run `cargo regress explain <symbol>` for deeper analysis.".dimmed());
+    println!(
+        "{}",
+        "Run `cargo regress explain <symbol>` for deeper analysis.".dimmed()
+    );
 }
 
 fn print_suggestion(s: &suggest::Suggestion) {

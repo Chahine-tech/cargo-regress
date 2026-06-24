@@ -4,4 +4,4 @@ pub mod classify;
 pub mod diff;
 pub mod suggest;
 
-pub use causal::{attribute, CausalCause, CausalEntry, DepGraph, LockDiff};
+pub use causal::{CausalCause, CausalEntry, DepGraph, LockDiff, attribute};

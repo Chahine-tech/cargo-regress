@@ -2,7 +2,7 @@ pub mod dep_graph;
 pub mod lock_diff;
 
 pub use dep_graph::DepGraph;
-pub use lock_diff::{diff as diff_lockfiles, LockDiff};
+pub use lock_diff::{LockDiff, diff as diff_lockfiles};
 
 use serde::{Deserialize, Serialize};
 
@@ -59,7 +59,9 @@ pub fn attribute(
             let name = group.name.as_str();
 
             let cause = if let Some(version) = added_names.get(name) {
-                CausalCause::NewDependency { version: version.to_string() }
+                CausalCause::NewDependency {
+                    version: version.to_string(),
+                }
             } else if let Some((from, to)) = bumped.get(name) {
                 CausalCause::VersionBump {
                     from: from.to_string(),
@@ -89,7 +91,11 @@ mod tests {
     use crate::diff::grouping::CrateGroup;
 
     fn make_group(name: &str, delta: i64) -> CrateGroup {
-        CrateGroup { name: name.to_string(), delta, symbols: vec![] }
+        CrateGroup {
+            name: name.to_string(),
+            delta,
+            symbols: vec![],
+        }
     }
 
     fn graph_with_regex() -> DepGraph {
@@ -122,7 +128,11 @@ mod tests {
         let lock_diff = LockDiff {
             added: vec![],
             removed: vec![],
-            updated: vec![("regex".to_string(), "1.10.0".to_string(), "1.11.0".to_string())],
+            updated: vec![(
+                "regex".to_string(),
+                "1.10.0".to_string(),
+                "1.11.0".to_string(),
+            )],
         };
         let entries = attribute(&groups, &lock_diff, &graph_with_regex());
         assert!(matches!(
@@ -134,7 +144,11 @@ mod tests {
     #[test]
     fn symbol_growth_cause_for_existing_dep() {
         let groups = vec![make_group("regex", 2_000)];
-        let lock_diff = LockDiff { added: vec![], removed: vec![], updated: vec![] };
+        let lock_diff = LockDiff {
+            added: vec![],
+            removed: vec![],
+            updated: vec![],
+        };
         let entries = attribute(&groups, &lock_diff, &graph_with_regex());
         assert!(matches!(&entries[0].cause, CausalCause::SymbolGrowth));
     }
@@ -142,7 +156,11 @@ mod tests {
     #[test]
     fn import_path_populated_from_dep_graph() {
         let groups = vec![make_group("regex", 1_000)];
-        let lock_diff = LockDiff { added: vec![], removed: vec![], updated: vec![] };
+        let lock_diff = LockDiff {
+            added: vec![],
+            removed: vec![],
+            updated: vec![],
+        };
         let entries = attribute(&groups, &lock_diff, &graph_with_regex());
         assert_eq!(entries[0].import_path, vec!["my-app", "regex"]);
     }
@@ -150,7 +168,11 @@ mod tests {
     #[test]
     fn active_features_populated_from_dep_graph() {
         let groups = vec![make_group("regex", 1_000)];
-        let lock_diff = LockDiff { added: vec![], removed: vec![], updated: vec![] };
+        let lock_diff = LockDiff {
+            added: vec![],
+            removed: vec![],
+            updated: vec![],
+        };
         let entries = attribute(&groups, &lock_diff, &graph_with_regex());
         assert_eq!(entries[0].active_features, vec!["unicode"]);
     }

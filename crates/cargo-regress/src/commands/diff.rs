@@ -59,9 +59,7 @@ pub fn run(args: &DiffArgs, repo: &Path) -> Result<()> {
 }
 
 pub fn read_lock_diff(from_root: &Path, to_root: &Path) -> regress_core::LockDiff {
-    let read = |root: &Path| {
-        std::fs::read_to_string(root.join("Cargo.lock")).unwrap_or_default()
-    };
+    let read = |root: &Path| std::fs::read_to_string(root.join("Cargo.lock")).unwrap_or_default();
     causal::diff_lockfiles(&read(from_root), &read(to_root))
 }
 

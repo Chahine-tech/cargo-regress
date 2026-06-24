@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use regress_core::causal::{CausalCause, CausalEntry};
 use regress_core::classify::{self, BloatCategory};
-use regress_core::diff::{group_by_crate, BinaryDiff};
+use regress_core::diff::{BinaryDiff, group_by_crate};
 use regress_core::suggest;
 
 use crate::terminal::fmt_bytes;
@@ -12,7 +12,13 @@ pub fn render(diff: &BinaryDiff, causal: &[CausalEntry], from: &str, to: &str) -
     let delta = diff.total_delta();
     let pct = diff.total_delta_pct();
 
-    let emoji = if delta > 0 { "🔴" } else if delta < 0 { "🟢" } else { "⚪" };
+    let emoji = if delta > 0 {
+        "🔴"
+    } else if delta < 0 {
+        "🟢"
+    } else {
+        "⚪"
+    };
     let sign = if delta >= 0 { "+" } else { "" };
 
     out.push_str(&format!(
@@ -53,7 +59,9 @@ pub fn render(diff: &BinaryDiff, causal: &[CausalEntry], from: &str, to: &str) -
     // Detail section: import paths, features, suggestions
     let has_details = groups.iter().take(10).any(|g| {
         let entry = causal_map.get(g.name.as_str()).copied();
-        entry.map(|e| e.import_path.len() > 1 || !e.active_features.is_empty()).unwrap_or(false)
+        entry
+            .map(|e| e.import_path.len() > 1 || !e.active_features.is_empty())
+            .unwrap_or(false)
             || !suggest::for_crate(&g.name).is_empty()
     });
 
@@ -103,13 +111,13 @@ pub fn render(diff: &BinaryDiff, causal: &[CausalEntry], from: &str, to: &str) -
             let mono_suggestions = result
                 .mono_group
                 .as_ref()
-                .map(|m| {
-                    suggest::for_monomorph(&m.base_name, m.instantiation_count, m.total_delta)
-                })
+                .map(|m| suggest::for_monomorph(&m.base_name, m.instantiation_count, m.total_delta))
                 .unwrap_or_default();
             let crate_suggestions = suggest::for_crate(&group.name);
-            let all_suggestions: Vec<_> =
-                mono_suggestions.iter().chain(crate_suggestions.iter()).collect();
+            let all_suggestions: Vec<_> = mono_suggestions
+                .iter()
+                .chain(crate_suggestions.iter())
+                .collect();
 
             if !all_suggestions.is_empty() {
                 out.push_str("\n**Suggestions:**\n\n");

@@ -60,7 +60,10 @@ impl ClassificationResult {
 
 /// Classify a single symbol (fast path used in simple contexts).
 pub fn classify(sym: &SymbolDiff) -> BloatCategory {
-    if derive_support::DERIVE_PATTERNS.iter().any(|p| sym.demangled.contains(p)) {
+    if derive_support::DERIVE_PATTERNS
+        .iter()
+        .any(|p| sym.demangled.contains(p))
+    {
         return BloatCategory::DeriveSupport;
     }
     if sym.section.contains("rodata") || sym.section.contains(".data") {
@@ -136,11 +139,19 @@ pub fn classify_group(group: &CrateGroup, causal: Option<&CausalEntry>) -> Class
     if let Some(sym) = group.symbols.iter().max_by_key(|s| s.delta) {
         let cat = classify(sym);
         if cat != BloatCategory::Unknown {
-            return ClassificationResult { category: cat, confidence: 0.45, mono_group: None };
+            return ClassificationResult {
+                category: cat,
+                confidence: 0.45,
+                mono_group: None,
+            };
         }
     }
 
-    ClassificationResult { category: BloatCategory::Unknown, confidence: 0.0, mono_group: None }
+    ClassificationResult {
+        category: BloatCategory::Unknown,
+        confidence: 0.0,
+        mono_group: None,
+    }
 }
 
 #[cfg(test)]
@@ -199,11 +210,17 @@ mod tests {
     #[test]
     fn new_dependency_cause_overrides_classification() {
         use crate::causal::{CausalCause, CausalEntry};
-        let group = CrateGroup { name: "regex".into(), delta: 143_000, symbols: vec![] };
+        let group = CrateGroup {
+            name: "regex".into(),
+            delta: 143_000,
+            symbols: vec![],
+        };
         let entry = CausalEntry {
             crate_name: "regex".into(),
             delta: 143_000,
-            cause: CausalCause::NewDependency { version: "1.11.0".into() },
+            cause: CausalCause::NewDependency {
+                version: "1.11.0".into(),
+            },
             import_path: vec![],
             active_features: vec![],
         };

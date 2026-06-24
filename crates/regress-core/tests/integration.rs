@@ -29,8 +29,7 @@ fn build_fixture(name: &str) -> PathBuf {
 #[test]
 fn dep_graph_finds_regex_in_bloat_dep() {
     let manifest = fixture("bloat-dep").join("Cargo.toml");
-    let graph = regress_core::causal::DepGraph::from_manifest(&manifest)
-        .expect("dep graph failed");
+    let graph = regress_core::causal::DepGraph::from_manifest(&manifest).expect("dep graph failed");
 
     let path = graph.path_to("regex").expect("regex not found in graph");
     // path should be ["bloat-dep", "regex"]
@@ -41,8 +40,7 @@ fn dep_graph_finds_regex_in_bloat_dep() {
 #[test]
 fn dep_graph_unknown_crate_returns_none() {
     let manifest = fixture("bloat-dep").join("Cargo.toml");
-    let graph = regress_core::causal::DepGraph::from_manifest(&manifest)
-        .expect("dep graph failed");
+    let graph = regress_core::causal::DepGraph::from_manifest(&manifest).expect("dep graph failed");
     assert!(graph.path_to("this_crate_does_not_exist").is_none());
 }
 

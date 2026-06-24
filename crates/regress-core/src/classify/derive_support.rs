@@ -13,8 +13,6 @@ pub const DERIVE_PATTERNS: &[&str] = &[
 pub fn detect(symbols: &[SymbolDiff]) -> Vec<&SymbolDiff> {
     symbols
         .iter()
-        .filter(|s| {
-            s.delta > 0 && DERIVE_PATTERNS.iter().any(|p| s.demangled.contains(p))
-        })
+        .filter(|s| s.delta > 0 && DERIVE_PATTERNS.iter().any(|p| s.demangled.contains(p)))
         .collect()
 }

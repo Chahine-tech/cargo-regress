@@ -4,7 +4,7 @@ use anyhow::Result;
 use owo_colors::OwoColorize;
 use regress_core::binary;
 use regress_core::classify::{self, BloatCategory};
-use regress_core::diff::{group_by_crate, SymbolDiff};
+use regress_core::diff::{SymbolDiff, group_by_crate};
 
 use crate::build;
 use crate::cli::SnapshotArgs;

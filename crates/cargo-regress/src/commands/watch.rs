@@ -46,7 +46,12 @@ pub fn run(args: &WatchArgs, repo: &Path) -> Result<()> {
     let binary_name = args
         .bin
         .clone()
-        .or_else(|| bin_path.file_name().and_then(|n| n.to_str()).map(String::from))
+        .or_else(|| {
+            bin_path
+                .file_name()
+                .and_then(|n| n.to_str())
+                .map(String::from)
+        })
         .unwrap_or_else(|| "binary".to_string());
 
     let entry = WatchEntry {
@@ -138,8 +143,7 @@ fn display_history(history: &[WatchEntry]) {
     println!("{}", "─".repeat(56).dimmed());
 
     // Show newest-first, up to 10 entries
-    let to_show: Vec<(usize, &WatchEntry)> =
-        history.iter().enumerate().rev().take(10).collect();
+    let to_show: Vec<(usize, &WatchEntry)> = history.iter().enumerate().rev().take(10).collect();
 
     for (hist_idx, entry) in &to_show {
         let delta = if *hist_idx > 0 {

@@ -44,18 +44,30 @@ fn user_rules_path() -> Option<PathBuf> {
     // $HOME on Unix, %USERPROFILE% on Windows.
     std::env::var_os("HOME")
         .or_else(|| std::env::var_os("USERPROFILE"))
-        .map(|h| PathBuf::from(h).join(".cargo").join("regress").join("rules.toml"))
+        .map(|h| {
+            PathBuf::from(h)
+                .join(".cargo")
+                .join("regress")
+                .join("rules.toml")
+        })
 }
 
 pub fn for_crate(crate_name: &str) -> Vec<Suggestion> {
     load_rules()
         .into_iter()
         .filter(|r| r.crate_name == crate_name)
-        .map(|r| Suggestion { text: r.suggestion, estimated_savings_bytes: r.estimated_savings_bytes })
+        .map(|r| Suggestion {
+            text: r.suggestion,
+            estimated_savings_bytes: r.estimated_savings_bytes,
+        })
         .collect()
 }
 
-pub fn for_monomorph(base_name: &str, instantiation_count: usize, total_delta: i64) -> Vec<Suggestion> {
+pub fn for_monomorph(
+    base_name: &str,
+    instantiation_count: usize,
+    total_delta: i64,
+) -> Vec<Suggestion> {
     vec![Suggestion {
         text: format!(
             "Use the `momo` crate or Box<dyn Fn> to de-duplicate {instantiation_count} instantiations of `{base_name}`"

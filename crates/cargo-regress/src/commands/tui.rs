@@ -6,18 +6,18 @@ use anyhow::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEventKind};
 use crossterm::execute;
 use crossterm::terminal::{
-    disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
+    EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode,
 };
+use ratatui::Terminal;
 use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, List, ListItem, ListState, Paragraph};
-use ratatui::Terminal;
 use regress_core::causal::CausalEntry;
 use regress_core::classify;
 use regress_core::classify::BloatCategory;
-use regress_core::diff::{group_by_crate, BinaryDiff, CrateGroup};
+use regress_core::diff::{BinaryDiff, CrateGroup, group_by_crate};
 use regress_core::{binary, diff};
 
 use crate::build;
@@ -56,8 +56,10 @@ impl App {
         let all_groups = group_by_crate(&growing);
         let filtered: Vec<usize> = (0..all_groups.len()).collect();
 
-        let causal_map: HashMap<String, CausalEntry> =
-            causal_entries.into_iter().map(|e| (e.crate_name.clone(), e)).collect();
+        let causal_map: HashMap<String, CausalEntry> = causal_entries
+            .into_iter()
+            .map(|e| (e.crate_name.clone(), e))
+            .collect();
 
         let mut crate_state = ListState::default();
         if !filtered.is_empty() {
@@ -87,7 +89,11 @@ impl App {
         self.filtered = (0..self.all_groups.len())
             .filter(|&i| q.is_empty() || self.all_groups[i].name.to_lowercase().contains(&q))
             .collect();
-        let sel = if self.filtered.is_empty() { None } else { Some(0) };
+        let sel = if self.filtered.is_empty() {
+            None
+        } else {
+            Some(0)
+        };
         self.crate_state.select(sel);
         self.symbol_state.select(None);
     }
@@ -96,17 +102,23 @@ impl App {
         match self.focus {
             Focus::Crates => {
                 let n = self.filtered.len();
-                if n == 0 { return; }
+                if n == 0 {
+                    return;
+                }
                 let i = self.crate_state.selected().unwrap_or(0);
-                self.crate_state.select(Some(if i == 0 { n - 1 } else { i - 1 }));
+                self.crate_state
+                    .select(Some(if i == 0 { n - 1 } else { i - 1 }));
                 self.symbol_state.select(None);
             }
             Focus::Symbols => {
                 if let Some(gi) = self.selected_group_idx() {
                     let n = self.all_groups[gi].symbols.len();
-                    if n == 0 { return; }
+                    if n == 0 {
+                        return;
+                    }
                     let i = self.symbol_state.selected().unwrap_or(0);
-                    self.symbol_state.select(Some(if i == 0 { n - 1 } else { i - 1 }));
+                    self.symbol_state
+                        .select(Some(if i == 0 { n - 1 } else { i - 1 }));
                 }
             }
         }
@@ -116,7 +128,9 @@ impl App {
         match self.focus {
             Focus::Crates => {
                 let n = self.filtered.len();
-                if n == 0 { return; }
+                if n == 0 {
+                    return;
+                }
                 let i = self.crate_state.selected().unwrap_or(0);
                 self.crate_state.select(Some((i + 1) % n));
                 self.symbol_state.select(None);
@@ -124,7 +138,9 @@ impl App {
             Focus::Symbols => {
                 if let Some(gi) = self.selected_group_idx() {
                     let n = self.all_groups[gi].symbols.len();
-                    if n == 0 { return; }
+                    if n == 0 {
+                        return;
+                    }
                     let i = self.symbol_state.selected().unwrap_or(0);
                     self.symbol_state.select(Some((i + 1) % n));
                 }
@@ -249,7 +265,11 @@ fn ui(f: &mut ratatui::Frame, app: &mut App, args: &DiffArgs) {
     let area = f.area();
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(3), Constraint::Min(0), Constraint::Length(1)])
+        .constraints([
+            Constraint::Length(3),
+            Constraint::Min(0),
+            Constraint::Length(1),
+        ])
         .split(area);
 
     draw_header(f, app, args, chunks[0]);
@@ -260,10 +280,17 @@ fn ui(f: &mut ratatui::Frame, app: &mut App, args: &DiffArgs) {
 fn draw_header(f: &mut ratatui::Frame, app: &App, args: &DiffArgs, area: Rect) {
     let delta = app.binary_diff.total_delta();
     let pct = app.binary_diff.total_delta_pct();
-    let (sign, color) = if delta >= 0 { ("+", Color::Red) } else { ("", Color::Green) };
+    let (sign, color) = if delta >= 0 {
+        ("+", Color::Red)
+    } else {
+        ("", Color::Green)
+    };
 
     let line = Line::from(vec![
-        Span::styled(" cargo regress  ", Style::default().add_modifier(Modifier::BOLD)),
+        Span::styled(
+            " cargo regress  ",
+            Style::default().add_modifier(Modifier::BOLD),
+        ),
         Span::raw(format!("{} → {}  ", args.from, args.to)),
         Span::styled(
             format!("{sign}{} ({sign}{:.1}%)", fmt_bytes(delta), pct),
@@ -303,8 +330,15 @@ fn draw_crates(f: &mut ratatui::Frame, app: &mut App, area: Rect) {
     };
 
     let items: Vec<ListItem> = if app.filtered.is_empty() {
-        let msg = if app.search.is_empty() { "  No regressions" } else { "  No matches" };
-        vec![ListItem::new(Span::styled(msg, Style::default().fg(Color::DarkGray)))]
+        let msg = if app.search.is_empty() {
+            "  No regressions"
+        } else {
+            "  No matches"
+        };
+        vec![ListItem::new(Span::styled(
+            msg,
+            Style::default().fg(Color::DarkGray),
+        ))]
     } else {
         app.filtered
             .iter()
@@ -335,7 +369,11 @@ fn draw_crates(f: &mut ratatui::Frame, app: &mut App, area: Rect) {
                 .borders(Borders::ALL)
                 .border_style(border_style(focused)),
         )
-        .highlight_style(Style::default().bg(Color::DarkGray).add_modifier(Modifier::BOLD))
+        .highlight_style(
+            Style::default()
+                .bg(Color::DarkGray)
+                .add_modifier(Modifier::BOLD),
+        )
         .highlight_symbol("▶ ");
 
     f.render_stateful_widget(list, area, &mut app.crate_state);
@@ -357,19 +395,23 @@ fn draw_symbols(f: &mut ratatui::Frame, app: &mut App, area: Rect) {
             let causal = app.causal_map.get(&group.name);
             let result = classify::classify_group(group, causal);
 
-            let conf = format!(
-                " [{}] {}",
-                result.category,
-                result.confidence_label()
+            let conf = format!(" [{}] {}", result.category, result.confidence_label());
+            let title = format!(
+                " Symbols — {}{}  ({}) ",
+                group.name,
+                conf,
+                group.symbols.len()
             );
-            let title = format!(" Symbols — {}{}  ({}) ", group.name, conf, group.symbols.len());
 
             let items: Vec<ListItem> = group
                 .symbols
                 .iter()
                 .map(|sym| {
-                    let (color, sign) =
-                        if sym.delta >= 0 { (Color::Red, "+") } else { (Color::Green, "") };
+                    let (color, sign) = if sym.delta >= 0 {
+                        (Color::Red, "+")
+                    } else {
+                        (Color::Green, "")
+                    };
                     ListItem::new(Line::from(vec![
                         Span::styled(
                             format!("{sign}{:>9}  ", fmt_bytes(sym.delta)),
@@ -390,7 +432,11 @@ fn draw_symbols(f: &mut ratatui::Frame, app: &mut App, area: Rect) {
                 .borders(Borders::ALL)
                 .border_style(border_style(focused)),
         )
-        .highlight_style(Style::default().bg(Color::DarkGray).add_modifier(Modifier::BOLD))
+        .highlight_style(
+            Style::default()
+                .bg(Color::DarkGray)
+                .add_modifier(Modifier::BOLD),
+        )
         .highlight_symbol("  ");
 
     f.render_stateful_widget(list, area, &mut app.symbol_state);

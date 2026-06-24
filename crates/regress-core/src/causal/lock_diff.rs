@@ -67,7 +67,11 @@ pub fn diff(from_lock: &str, to_lock: &str) -> LockDiff {
         }
     }
 
-    LockDiff { added, removed, updated }
+    LockDiff {
+        added,
+        removed,
+        updated,
+    }
 }
 
 #[cfg(test)]
@@ -107,9 +111,11 @@ version = "1.0.0"
     #[test]
     fn detects_version_bump() {
         let d = diff(LOCK_A, LOCK_B);
-        assert!(d.updated.iter().any(|(name, from, to)| {
-            name == "bar" && from == "0.2.0" && to == "0.3.0"
-        }));
+        assert!(
+            d.updated
+                .iter()
+                .any(|(name, from, to)| { name == "bar" && from == "0.2.0" && to == "0.3.0" })
+        );
     }
 
     #[test]

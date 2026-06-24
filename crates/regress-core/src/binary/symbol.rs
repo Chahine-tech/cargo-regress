@@ -12,7 +12,13 @@ pub struct SymbolEntry {
 impl SymbolEntry {
     pub fn new(name: String, size: u64, section: String, address: u64) -> Self {
         let demangled = rustc_demangle::demangle(&name).to_string();
-        Self { name, demangled, size, section, address }
+        Self {
+            name,
+            demangled,
+            size,
+            section,
+            address,
+        }
     }
 
     pub fn crate_name(&self) -> &str {

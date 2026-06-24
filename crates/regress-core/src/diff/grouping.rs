@@ -14,11 +14,13 @@ pub fn group_by_crate(symbols: &[SymbolDiff]) -> Vec<CrateGroup> {
 
     for sym in symbols {
         let crate_name = sym.crate_name().to_string();
-        let group = groups.entry(crate_name.clone()).or_insert_with(|| CrateGroup {
-            name: crate_name,
-            delta: 0,
-            symbols: Vec::new(),
-        });
+        let group = groups
+            .entry(crate_name.clone())
+            .or_insert_with(|| CrateGroup {
+                name: crate_name,
+                delta: 0,
+                symbols: Vec::new(),
+            });
         group.delta += sym.delta;
         group.symbols.push(sym.clone());
     }

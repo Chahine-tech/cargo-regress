@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use anyhow::Result;
 use regress_core::causal::{CausalCause, CausalEntry};
 use regress_core::classify::{self, MonomorphSummary};
-use regress_core::diff::{group_by_crate, BinaryDiff};
+use regress_core::diff::{BinaryDiff, group_by_crate};
 use regress_core::suggest;
 use serde::Serialize;
 
@@ -54,15 +54,23 @@ pub fn render(diff: &BinaryDiff, causal: &[CausalEntry], from: &str, to: &str) -
             let entry = causal_map.get(group.name.as_str()).copied();
             let result = classify::classify_group(group, entry);
 
-            let symbols: Vec<String> =
-                group.symbols.iter().take(20).map(|s| s.demangled.clone()).collect();
+            let symbols: Vec<String> = group
+                .symbols
+                .iter()
+                .take(20)
+                .map(|s| s.demangled.clone())
+                .collect();
 
             let mut suggestions: Vec<String> = Vec::new();
             if let Some(ref mono) = result.mono_group {
                 suggestions.extend(
-                    suggest::for_monomorph(&mono.base_name, mono.instantiation_count, mono.total_delta)
-                        .into_iter()
-                        .map(|s| s.text),
+                    suggest::for_monomorph(
+                        &mono.base_name,
+                        mono.instantiation_count,
+                        mono.total_delta,
+                    )
+                    .into_iter()
+                    .map(|s| s.text),
                 );
             }
             suggestions.extend(suggest::for_crate(&group.name).into_iter().map(|s| s.text));
@@ -70,12 +78,13 @@ pub fn render(diff: &BinaryDiff, causal: &[CausalEntry], from: &str, to: &str) -
             let (cause, import_path, active_features) = match entry {
                 Some(e) => {
                     let cause = match &e.cause {
-                        CausalCause::NewDependency { version } => {
-                            Some(CauseJson::NewDependency { version: version.clone() })
-                        }
-                        CausalCause::VersionBump { from, to } => {
-                            Some(CauseJson::VersionBump { from: from.clone(), to: to.clone() })
-                        }
+                        CausalCause::NewDependency { version } => Some(CauseJson::NewDependency {
+                            version: version.clone(),
+                        }),
+                        CausalCause::VersionBump { from, to } => Some(CauseJson::VersionBump {
+                            from: from.clone(),
+                            to: to.clone(),
+                        }),
                         _ => Some(CauseJson::SymbolGrowth),
                     };
                     (cause, e.import_path.clone(), e.active_features.clone())
@@ -103,10 +112,11 @@ pub fn render(diff: &BinaryDiff, causal: &[CausalEntry], from: &str, to: &str) -
         classify::classify_group(g, entry).category
             == regress_core::classify::BloatCategory::HiddenData
     });
-    let profile_suggestions = suggest::for_build_profile(diff.total_delta(), has_hidden, groups.len())
-        .into_iter()
-        .map(|s| s.text)
-        .collect();
+    let profile_suggestions =
+        suggest::for_build_profile(diff.total_delta(), has_hidden, groups.len())
+            .into_iter()
+            .map(|s| s.text)
+            .collect();
 
     let report = DiffReport {
         from,

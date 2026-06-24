@@ -6,8 +6,8 @@ use object::{Object, ObjectSection, ObjectSymbol};
 use super::symbol::SymbolEntry;
 
 pub fn parse_symbols(path: &Path) -> Result<Vec<SymbolEntry>> {
-    let data = std::fs::read(path)
-        .with_context(|| format!("Cannot read binary: {}", path.display()))?;
+    let data =
+        std::fs::read(path).with_context(|| format!("Cannot read binary: {}", path.display()))?;
 
     let file = object::File::parse(&*data)
         .with_context(|| format!("Cannot parse binary format: {}", path.display()))?;
