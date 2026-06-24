@@ -110,10 +110,10 @@ pub fn compute_diff(from: &[SymbolEntry], to: &[SymbolEntry]) -> BinaryDiff {
         }
     }
 
-    diff.added.sort_by(|a, b| b.delta.cmp(&a.delta));
-    diff.removed.sort_by(|a, b| a.delta.cmp(&b.delta));
-    diff.grown.sort_by(|a, b| b.delta.cmp(&a.delta));
-    diff.shrunk.sort_by(|a, b| a.delta.cmp(&b.delta));
+    diff.added.sort_by_key(|b| std::cmp::Reverse(b.delta));
+    diff.removed.sort_by_key(|a| a.delta);
+    diff.grown.sort_by_key(|b| std::cmp::Reverse(b.delta));
+    diff.shrunk.sort_by_key(|a| a.delta);
 
     diff
 }

@@ -48,7 +48,7 @@ pub fn detect(symbols: &[SymbolDiff]) -> Vec<MonomorphGroup> {
         })
         .collect();
 
-    groups.sort_by(|a, b| b.total_delta.cmp(&a.total_delta));
+    groups.sort_by_key(|b| std::cmp::Reverse(b.total_delta));
     groups
 }
 

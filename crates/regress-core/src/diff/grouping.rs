@@ -27,7 +27,7 @@ pub fn group_by_crate(symbols: &[SymbolDiff]) -> Vec<CrateGroup> {
 
     let mut result: Vec<CrateGroup> = groups.into_values().collect();
     // Sort by absolute delta descending so biggest regressions come first
-    result.sort_by(|a, b| b.delta.abs().cmp(&a.delta.abs()));
+    result.sort_by_key(|b| std::cmp::Reverse(b.delta.abs()));
     result
 }
 
