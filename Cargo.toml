@@ -7,7 +7,7 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.5.0"
+version = "0.5.1"
 edition = "2024"
 rust-version = "1.85"
 authors = ["Chahine Ben Lahcen <chahine.benlahcen@gmail.com>"]
@@ -30,5 +30,5 @@ thiserror = "2"
 toml = { version = "0.8", default-features = false, features = ["parse"] }
 ratatui = "0.30"
 crossterm = "0.28"
-regress-core = { path = "crates/regress-core", version = "0.5.0" }
-regress-render = { path = "crates/regress-render", version = "0.5.0" }
+regress-core = { path = "crates/regress-core", version = "0.5.1" }
+regress-render = { path = "crates/regress-render", version = "0.5.1" }
