@@ -249,7 +249,9 @@ Each classification carries a confidence score. `[monomorphization]` is high-con
     {
       "crate_name": "regex",
       "delta_bytes": 143360,
-      "category": "unknown",
+      "category": "new_dependency",
+      "confidence": 0.95,
+      "mono_group": null,
       "cause": {
         "type": "new_dependency",
         "version": "1.11.0"
@@ -310,14 +312,14 @@ Each classification carries a confidence score. `[monomorphization]` is high-con
 - [x] Symbol → crate → import chain attribution
 - [x] Detect expensive Cargo features enabled transitively
 
-### v0.3 — Classification & suggestions (current)
-- [ ] Full monomorphization classifier (N-instantiation grouping)
-- [ ] Hidden data classifier (`.rodata`, panic strings, vtables)
-- [ ] Derive support code classifier
-- [ ] Extensible suggestion rules (TOML, community-contributed)
-- [ ] `cargo regress explain <symbol>`
+### v0.3 — Classification & suggestions ✓
+- [x] Full monomorphization classifier (N-instantiation grouping)
+- [x] Hidden data classifier (`.rodata`, panic strings, vtables)
+- [x] Derive support code classifier
+- [x] Extensible suggestion rules (TOML, community-contributed)
+- [x] `cargo regress explain <symbol>`
 
-### v0.4 — CI & polish
+### v0.4 — CI & polish (current)
 - [ ] `cargo regress watch` — local size history per branch
 - [ ] GitHub Actions summary format with PR annotation support
 - [ ] Windows PE support (full)
