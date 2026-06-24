@@ -132,7 +132,23 @@ pub fn render_diff(diff: &BinaryDiff, causal: &[CausalEntry], from: &str, to: &s
         );
     }
 
-    println!();
+    // Build-profile suggestions based on the overall regression pattern
+    let has_hidden = groups.iter().any(|g| {
+        let entry = causal_map.get(g.name.as_str()).copied();
+        classify::classify_group(g, entry).category == BloatCategory::HiddenData
+    });
+    let profile_suggestions =
+        suggest::for_build_profile(diff.total_delta(), has_hidden, groups.len());
+
+    if !profile_suggestions.is_empty() {
+        println!("{}", "BUILD PROFILE SUGGESTIONS".bold());
+        println!("{}", "━".repeat(60).dimmed());
+        for s in &profile_suggestions {
+            print_suggestion(s);
+        }
+        println!();
+    }
+
     println!("{}", "Run `cargo regress explain <symbol>` for deeper analysis.".dimmed());
 }
 

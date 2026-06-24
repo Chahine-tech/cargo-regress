@@ -64,6 +64,41 @@ pub fn for_monomorph(base_name: &str, instantiation_count: usize, total_delta: i
     }]
 }
 
+/// Generic build-profile suggestions triggered by the overall regression pattern.
+pub fn for_build_profile(
+    total_delta: i64,
+    has_hidden_data: bool,
+    growing_crate_count: usize,
+) -> Vec<Suggestion> {
+    let mut out = Vec::new();
+
+    if has_hidden_data {
+        out.push(Suggestion {
+            text: r#"[profile.release] strip = "debuginfo"  — removes debug sections from binary"#
+                .to_string(),
+            estimated_savings_bytes: None,
+        });
+    }
+
+    if total_delta > 50_000 {
+        out.push(Suggestion {
+            text: r#"[profile.release] panic = "abort"  — removes unwinding tables (~20–50 KB)"#
+                .to_string(),
+            estimated_savings_bytes: Some(30_000),
+        });
+    }
+
+    if growing_crate_count >= 3 || total_delta > 100_000 {
+        out.push(Suggestion {
+            text: r#"[profile.release] lto = "thin"  — enables cross-crate dead code elimination"#
+                .to_string(),
+            estimated_savings_bytes: None,
+        });
+    }
+
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

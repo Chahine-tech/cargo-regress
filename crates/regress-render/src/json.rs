@@ -16,6 +16,7 @@ pub struct DiffReport<'a> {
     pub total_delta_bytes: i64,
     pub total_delta_pct: f64,
     pub regressions: Vec<RegressionEntry>,
+    pub profile_suggestions: Vec<String>,
 }
 
 #[derive(Serialize)]
@@ -97,6 +98,16 @@ pub fn render(diff: &BinaryDiff, causal: &[CausalEntry], from: &str, to: &str) -
         })
         .collect();
 
+    let has_hidden = groups.iter().any(|g| {
+        let entry = causal_map.get(g.name.as_str()).copied();
+        classify::classify_group(g, entry).category
+            == regress_core::classify::BloatCategory::HiddenData
+    });
+    let profile_suggestions = suggest::for_build_profile(diff.total_delta(), has_hidden, groups.len())
+        .into_iter()
+        .map(|s| s.text)
+        .collect();
+
     let report = DiffReport {
         from,
         to,
@@ -105,6 +116,7 @@ pub fn render(diff: &BinaryDiff, causal: &[CausalEntry], from: &str, to: &str) -
         total_delta_bytes: diff.total_delta(),
         total_delta_pct: diff.total_delta_pct(),
         regressions,
+        profile_suggestions,
     };
 
     Ok(serde_json::to_string_pretty(&report)?)
