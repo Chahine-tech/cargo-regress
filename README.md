@@ -5,7 +5,6 @@
 A Rust CLI that answers that question: binary size diff between two git commits, with causal attribution, classified by bloat type, and actionable suggestions.
 
 [![Crates.io](https://img.shields.io/crates/v/cargo-regress.svg)](https://crates.io/crates/cargo-regress)
-[![docs.rs](https://img.shields.io/docsrs/cargo-regress)](https://docs.rs/cargo-regress)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE)
 [![Rust 1.85+](https://img.shields.io/badge/rust-1.85%2B-orange.svg)](https://www.rust-lang.org)
 
