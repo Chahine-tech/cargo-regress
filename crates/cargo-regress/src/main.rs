@@ -22,7 +22,9 @@ fn main() -> Result<()> {
     let repo = build::find_repo_root()?;
 
     match cli.command {
-        Some(Command::Explain { symbol }) => commands::explain::run(&symbol)?,
+        Some(Command::Explain { symbol }) => {
+            commands::explain::run(&symbol, &cli.diff, &repo)?
+        }
         Some(Command::Watch) => commands::watch::run()?,
         Some(Command::Snapshot { .. }) => {
             eprintln!("cargo regress snapshot is not yet implemented (v0.3)");

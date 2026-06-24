@@ -31,7 +31,6 @@ pub fn render_diff(diff: &BinaryDiff, causal: &[CausalEntry], from: &str, to: &s
     println!();
 
     let growing: Vec<_> = diff.all_growing().cloned().collect();
-
     if growing.is_empty() {
         println!("{}", "No regressions found.".green());
         return;
@@ -45,29 +44,21 @@ pub fn render_diff(diff: &BinaryDiff, causal: &[CausalEntry], from: &str, to: &s
 
     let groups = group_by_crate(&growing);
     for group in groups.iter().take(10) {
-        let category = group
-            .symbols
-            .first()
-            .map(classify::classify)
-            .unwrap_or(BloatCategory::Unknown);
+        let entry = causal_map.get(group.name.as_str()).copied();
+        let result = classify::classify_group(group, entry);
 
-        let delta_str = format!("+{}", fmt_bytes(group.delta));
         println!(
             "  {}  {}  {}",
-            delta_str.red().bold(),
+            format!("+{}", fmt_bytes(group.delta)).red().bold(),
             group.name.bold(),
-            format!("[{}]", category).dimmed()
+            format!("[{}] ({})", result.category, result.confidence_label()).dimmed()
         );
 
-        // Causal block
-        if let Some(entry) = causal_map.get(group.name.as_str()) {
-            match &entry.cause {
+        // Causal lines
+        if let Some(e) = entry {
+            match &e.cause {
                 CausalCause::NewDependency { version } => {
-                    println!(
-                        "     {} new dependency ({})",
-                        "●".yellow(),
-                        version.dimmed()
-                    );
+                    println!("     {} new dependency ({})", "●".yellow(), version.dimmed());
                 }
                 CausalCause::VersionBump { from, to } => {
                     println!(
@@ -77,23 +68,32 @@ pub fn render_diff(diff: &BinaryDiff, causal: &[CausalEntry], from: &str, to: &s
                         to.dimmed()
                     );
                 }
-                CausalCause::SymbolGrowth => {}
                 _ => {}
             }
-
-            if entry.import_path.len() > 1 {
+            if e.import_path.len() > 1 {
                 println!(
                     "     {} import path: {}",
                     "└─".dimmed(),
-                    entry.import_path.join(" → ").dimmed()
+                    e.import_path.join(" → ").dimmed()
                 );
             }
-
-            if !entry.active_features.is_empty() {
+            if !e.active_features.is_empty() {
                 println!(
                     "     {} features: [{}]",
                     "└─".dimmed(),
-                    entry.active_features.join(", ").dimmed()
+                    e.active_features.join(", ").dimmed()
+                );
+            }
+        }
+
+        // Monomorphization instantiation detail
+        if result.category == BloatCategory::Monomorphization {
+            if let Some(ref mono) = result.mono_group {
+                println!(
+                    "     {} {} instantiations of `{}`",
+                    "└─".dimmed(),
+                    mono.instantiation_count,
+                    mono.base_name.dimmed()
                 );
             }
         }
@@ -103,29 +103,23 @@ pub fn render_diff(diff: &BinaryDiff, causal: &[CausalEntry], from: &str, to: &s
             println!("     {} {}", "└─".dimmed(), sym.demangled.dimmed());
         }
         if group.symbols.len() > 3 {
-            println!(
-                "        … and {} more symbols",
-                group.symbols.len() - 3
-            );
+            println!("        … and {} more symbols", group.symbols.len() - 3);
         }
 
         // Suggestions
-        for s in suggest::for_crate(&group.name) {
-            println!("     {} {}", "→".yellow(), s.text.yellow());
-            if let Some(savings) = s.estimated_savings_bytes {
-                println!(
-                    "       Estimated saving: {}",
-                    fmt_bytes(savings).green()
-                );
+        if let Some(ref mono) = result.mono_group {
+            for s in suggest::for_monomorph(&mono.base_name, mono.instantiation_count, mono.total_delta) {
+                print_suggestion(&s);
             }
+        }
+        for s in suggest::for_crate(&group.name) {
+            print_suggestion(&s);
         }
 
         println!();
     }
 
-    let shrink_total: u64 =
-        diff.all_shrinking().map(|s| s.delta.unsigned_abs()).sum();
-
+    let shrink_total: u64 = diff.all_shrinking().map(|s| s.delta.unsigned_abs()).sum();
     if shrink_total > 0 {
         println!(
             "{}",
@@ -140,6 +134,13 @@ pub fn render_diff(diff: &BinaryDiff, causal: &[CausalEntry], from: &str, to: &s
 
     println!();
     println!("{}", "Run `cargo regress explain <symbol>` for deeper analysis.".dimmed());
+}
+
+fn print_suggestion(s: &suggest::Suggestion) {
+    println!("     {} {}", "→".yellow(), s.text.yellow());
+    if let Some(savings) = s.estimated_savings_bytes {
+        println!("       Estimated saving: {}", fmt_bytes(savings).green());
+    }
 }
 
 pub fn fmt_bytes(bytes: i64) -> String {

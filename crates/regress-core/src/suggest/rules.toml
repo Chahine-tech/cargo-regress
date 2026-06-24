@@ -1,0 +1,16 @@
+[[rule]]
+crate = "regex"
+suggestion = 'Disable unicode feature: regex = { version = "...", default-features = false, features = ["std"] }'
+estimated_savings_bytes = 143360
+
+[[rule]]
+crate = "serde_json"
+suggestion = "Consider miniserde or nanoserde for simpler types to reduce monomorphization bloat"
+
+[[rule]]
+crate = "serde"
+suggestion = "Consider miniserde or nanoserde for simpler types to reduce monomorphization bloat"
+
+[[rule]]
+crate = "tokio"
+suggestion = 'Enable only needed features: tokio = { version = "...", features = ["rt", "net"] }'

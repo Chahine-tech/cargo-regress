@@ -10,3 +10,4 @@ rustc-demangle.workspace = true
 cargo_metadata.workspace = true
 serde.workspace = true
 anyhow.workspace = true
+toml.workspace = true

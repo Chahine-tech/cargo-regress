@@ -1,56 +1,67 @@
+use std::path::PathBuf;
+
 use serde::{Deserialize, Serialize};
 
-use crate::classify::monomorph::MonomorphGroup;
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Suggestion {
     pub text: String,
     pub estimated_savings_bytes: Option<i64>,
 }
 
-impl Suggestion {
-    fn new(text: impl Into<String>) -> Self {
-        Self { text: text.into(), estimated_savings_bytes: None }
+#[derive(Debug, Deserialize)]
+struct RuleFile {
+    rule: Vec<RuleEntry>,
+}
+
+#[derive(Debug, Deserialize)]
+struct RuleEntry {
+    #[serde(rename = "crate")]
+    crate_name: String,
+    suggestion: String,
+    estimated_savings_bytes: Option<i64>,
+}
+
+fn load_rules() -> Vec<RuleEntry> {
+    const BUILTIN: &str = include_str!("rules.toml");
+
+    let mut rules: Vec<RuleEntry> = toml::from_str::<RuleFile>(BUILTIN)
+        .expect("built-in rules.toml is malformed")
+        .rule;
+
+    if let Some(path) = user_rules_path() {
+        if let Ok(content) = std::fs::read_to_string(&path) {
+            match toml::from_str::<RuleFile>(&content) {
+                Ok(extra) => rules.extend(extra.rule),
+                Err(e) => eprintln!("⚠ Could not parse {}: {e}", path.display()),
+            }
+        }
     }
 
-    fn with_savings(text: impl Into<String>, bytes: i64) -> Self {
-        Self { text: text.into(), estimated_savings_bytes: Some(bytes) }
-    }
+    rules
+}
+
+fn user_rules_path() -> Option<PathBuf> {
+    // $HOME on Unix, %USERPROFILE% on Windows.
+    std::env::var_os("HOME")
+        .or_else(|| std::env::var_os("USERPROFILE"))
+        .map(|h| PathBuf::from(h).join(".cargo").join("regress").join("rules.toml"))
 }
 
 pub fn for_crate(crate_name: &str) -> Vec<Suggestion> {
-    match crate_name {
-        "regex" => vec![
-            Suggestion::with_savings(
-                r#"Disable unicode feature: regex = { version = "...", default-features = false, features = ["std"] }"#,
-                140 * 1024,
-            ),
-        ],
-        "serde_json" | "serde" => vec![
-            Suggestion::new(
-                "Consider miniserde or nanoserde for simpler types to reduce monomorphization bloat",
-            ),
-        ],
-        "tokio" => vec![
-            Suggestion::new(
-                r#"Enable only needed features: tokio = { version = "...", features = ["rt", "net"] }"#,
-            ),
-        ],
-        _ => vec![],
-    }
+    load_rules()
+        .into_iter()
+        .filter(|r| r.crate_name == crate_name)
+        .map(|r| Suggestion { text: r.suggestion, estimated_savings_bytes: r.estimated_savings_bytes })
+        .collect()
 }
 
-pub fn for_monomorph(group: &MonomorphGroup) -> Vec<Suggestion> {
-    vec![
-        Suggestion::with_savings(
-            format!(
-                "Use the `momo` crate or Box<dyn Fn> to de-duplicate {} instantiations of `{}`",
-                group.instantiations.len(),
-                group.base_name
-            ),
-            group.total_delta / 2,
+pub fn for_monomorph(base_name: &str, instantiation_count: usize, total_delta: i64) -> Vec<Suggestion> {
+    vec![Suggestion {
+        text: format!(
+            "Use the `momo` crate or Box<dyn Fn> to de-duplicate {instantiation_count} instantiations of `{base_name}`"
         ),
-    ]
+        estimated_savings_bytes: Some(total_delta / 2),
+    }]
 }
 
 #[cfg(test)]
