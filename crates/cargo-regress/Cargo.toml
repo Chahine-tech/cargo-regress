@@ -3,7 +3,14 @@ name = "cargo-regress"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
 description = "Binary size regression analysis for Rust projects"
+keywords = ["cargo", "binary-size", "regression", "bloat", "profiling"]
+categories = ["command-line-utilities", "development-tools::cargo-plugins"]
+readme = "../../README.md"
 
 [[bin]]
 name = "cargo-regress"
@@ -16,3 +23,5 @@ clap.workspace = true
 git2.workspace = true
 anyhow.workspace = true
 owo-colors.workspace = true
+serde.workspace = true
+serde_json.workspace = true

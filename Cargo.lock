@@ -90,7 +90,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-regress"
-version = "0.1.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -98,6 +98,8 @@ dependencies = [
  "owo-colors",
  "regress-core",
  "regress-render",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -543,7 +545,7 @@ checksum = "69cdb34c158ceb288df11e18b4bd39de994f6657d83847bdffdbd7f346754b0f"
 
 [[package]]
 name = "regress-core"
-version = "0.1.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "cargo_metadata",
@@ -555,7 +557,7 @@ dependencies = [
 
 [[package]]
 name = "regress-render"
-version = "0.1.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "owo-colors",

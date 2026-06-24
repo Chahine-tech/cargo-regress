@@ -3,6 +3,13 @@ name = "regress-core"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Core analysis library for cargo-regress: binary parsing, symbol diff, classification, causal attribution"
+keywords = ["binary-size", "bloat", "elf", "macho", "analysis"]
+categories = ["development-tools", "parser-implementations"]
 
 [dependencies]
 object.workspace = true

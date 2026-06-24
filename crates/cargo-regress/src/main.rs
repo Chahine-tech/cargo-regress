@@ -25,7 +25,7 @@ fn main() -> Result<()> {
         Some(Command::Explain { symbol }) => {
             commands::explain::run(&symbol, &cli.diff, &repo)?
         }
-        Some(Command::Watch) => commands::watch::run()?,
+        Some(Command::Watch { watch }) => commands::watch::run(&watch, &repo)?,
         Some(Command::Snapshot { .. }) => {
             eprintln!("cargo regress snapshot is not yet implemented (v0.3)");
         }

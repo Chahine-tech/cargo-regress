@@ -22,8 +22,11 @@ pub enum Command {
         /// Demangled symbol name to explain
         symbol: String,
     },
-    /// Watch mode: record binary size at each build
-    Watch,
+    /// Record current binary size to local history and show trend
+    Watch {
+        #[command(flatten)]
+        watch: WatchArgs,
+    },
     /// Show a size snapshot of the current binary (like cargo-bloat)
     Snapshot {
         #[arg(long)]
@@ -31,6 +34,17 @@ pub enum Command {
         #[arg(long)]
         lib: bool,
     },
+}
+
+#[derive(Args, Clone)]
+pub struct WatchArgs {
+    /// Specific binary to record (workspace)
+    #[arg(long)]
+    pub bin: Option<String>,
+
+    /// Record the library instead of a binary
+    #[arg(long)]
+    pub lib: bool,
 }
 
 #[derive(Args, Clone)]

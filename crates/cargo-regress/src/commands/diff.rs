@@ -38,7 +38,7 @@ pub fn run(args: &DiffArgs, repo: &Path) -> Result<()> {
             println!("{out}");
         }
         OutputFormat::Github => {
-            let out = github::render(&binary_diff, &args.from, &args.to);
+            let out = github::render(&binary_diff, &causal_entries, &args.from, &args.to);
             print!("{out}");
         }
     }

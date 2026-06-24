@@ -3,6 +3,13 @@ name = "regress-render"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Output renderers for cargo-regress: terminal, JSON, GitHub Actions"
+keywords = ["binary-size", "terminal", "github-actions", "rendering"]
+categories = ["development-tools", "visualization"]
 
 [dependencies]
 regress-core.workspace = true
