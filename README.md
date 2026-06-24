@@ -85,7 +85,7 @@ cargo-regress is organized as a Cargo workspace of three crates, each with a sin
 | Crate             | Role                                                                                          |
 |-------------------|-----------------------------------------------------------------------------------------------|
 | `regress-core`    | Pure analysis library: binary parsing, symbol diff, bloat classification, causal attribution, suggestions |
-| `regress-render`  | Output formatting: colored terminal, JSON, GitHub Actions summary                             |
+| `regress-render`  | Output formatting: terminal, JSON, GitHub Markdown, SARIF, GitLab Code Quality, HTML treemap  |
 | `cargo-regress`   | CLI binary and git orchestration: worktree management, cargo build invocation, clap interface |
 
 ```
@@ -111,7 +111,7 @@ cargo-regress is organized as a Cargo workspace of three crates, each with a sin
                               ▼
 ┌──────────────────────────────────────────────────────────────────┐
 │                        regress-render                            │
-│      terminal (owo-colors)  ·  JSON  ·  GitHub Markdown          │
+│  terminal · JSON · GitHub Markdown · SARIF · GitLab · HTML       │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
@@ -194,13 +194,69 @@ cargo regress --bin cli-tool --from v2.0 --to v2.1
 # JSON output
 cargo regress --format json
 
-# GitHub Actions summary (compatible with PR comments)
+# GitHub Actions summary (Markdown for PR comments)
 cargo regress --format github
+
+# SARIF 2.1.0 — upload to GitHub Code Scanning
+cargo regress --format sarif > results.sarif
+
+# GitLab Code Quality JSON — for MR integration
+cargo regress --format gitlab > gl-code-quality-report.json
+
+# Interactive HTML treemap (open in browser)
+cargo regress --format html > report.html
 
 # Fail with exit code 1 if regression exceeds threshold
 cargo regress --fail-on "+100kb"
 cargo regress --fail-on "+1mb"
 ```
+
+### Project setup
+
+```bash
+# Scaffold .cargo-regress.toml + .github/workflows/binary-size.yml in one command
+cargo regress init
+
+# With custom options
+cargo regress init --bin my-service --fail-on 50000 --no-github
+```
+
+`cargo regress init` detects the binary name from `Cargo.toml` automatically and
+generates a ready-to-use GitHub Actions workflow. It skips files that already
+exist — use `--force` to overwrite.
+
+### Config file
+
+`cargo regress init` creates `.cargo-regress.toml` at the repo root. CLI flags
+always take precedence over config values.
+
+```toml
+[defaults]
+# Output format: terminal | github | json | sarif | gitlab | html
+format = "terminal"
+
+# Fail if total regression exceeds this threshold in bytes (0 = disabled)
+fail_on_bytes = 10000
+
+# Binary to analyse — override auto-detection if needed
+# bin = "my-service"
+```
+
+### Baseline mode
+
+Compare the current binary against a saved snapshot without needing a second commit:
+
+```bash
+# Save current HEAD as baseline
+cargo regress baseline save
+cargo regress baseline save --bin my-service
+
+# Later: compare current HEAD against baseline
+cargo regress baseline compare
+cargo regress baseline compare --format github --fail-on "+50kb"
+```
+
+Baselines are stored at `~/.cargo/regress/baseline/<repo>-<binary>.json`.
 
 ### Secondary commands
 
@@ -211,6 +267,9 @@ cargo regress explain "serde_json::de::Deserialize<my_crate::User>"
 # Record current HEAD binary size to local history, then show trend
 cargo regress watch
 cargo regress watch --bin my-service
+
+# Rebuild automatically every 30 seconds (Ctrl-C to stop)
+cargo regress watch --interval 30
 
 # Display size history without building
 cargo regress watch --show
@@ -234,6 +293,7 @@ switch panels, `/` to filter crates by name, `q` to quit.
 `{sha, branch, timestamp, size_bytes}` to
 `~/.cargo/regress/watch/<repo>.jsonl`, and prints the last 10 entries
 with size deltas. `--show` displays the history without triggering a build.
+`--interval N` keeps rebuilding every N seconds until Ctrl-C.
 
 `cargo regress snapshot` analyses the current HEAD binary and displays
 all crates ranked by total symbol size, with bloat category when
@@ -308,6 +368,15 @@ Each classification carries a confidence score. `[monomorphization]` is high-con
 | Regression above `--fail-on` threshold | `1` |
 | Build or analysis error | `2` (anyhow propagation) |
 
+### Zero-config setup
+
+Run `cargo regress init` in your project root — it auto-detects your binary and writes both files:
+
+```
+✔ .cargo-regress.toml
+✔ .github/workflows/binary-size.yml
+```
+
 ### GitHub Actions — official action
 
 ```yaml
@@ -320,20 +389,53 @@ on:
 jobs:
   size-check:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - uses: Chahine-tech/cargo-regress@main
+      - uses: Chahine-tech/cargo-regress@v0.5.2
         with:
           from: ${{ github.event.pull_request.base.sha }}
           to: ${{ github.event.pull_request.head.sha }}
-          fail-on: "+500kb"
+          fail-on: "+100kb"
+          format: github
 ```
 
 The action posts a Markdown summary to the PR via `$GITHUB_STEP_SUMMARY` and exits with code 1 if the regression exceeds `fail-on`.
+
+### GitHub Actions — SARIF / Code Scanning
+
+Upload results to the GitHub Security tab (free for public repos):
+
+```yaml
+- uses: Chahine-tech/cargo-regress@v0.5.2
+  with:
+    from: ${{ github.event.pull_request.base.sha }}
+    to: ${{ github.event.pull_request.head.sha }}
+    format: sarif
+  id: regress
+- run: echo "${{ steps.regress.outputs.report }}" > results.sarif
+- uses: github/codeql-action/upload-sarif@v3
+  with:
+    sarif_file: results.sarif
+```
+
+### GitLab CI — Code Quality report
+
+```yaml
+binary-size:
+  script:
+    - cargo install cargo-regress --locked
+    - cargo regress --from $CI_MERGE_REQUEST_DIFF_BASE_SHA --to $CI_COMMIT_SHA
+        --format gitlab > gl-code-quality-report.json
+  artifacts:
+    reports:
+      codequality: gl-code-quality-report.json
+```
 
 ### GitHub Actions — manual install
 

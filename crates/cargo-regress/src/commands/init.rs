@@ -137,7 +137,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
-      - uses: Chahine-tech/cargo-regress@v0.5.1
+      - uses: Chahine-tech/cargo-regress@v0.5.2
         with:
           from: ${{{{ github.event.pull_request.base.sha }}}}
           to: ${{{{ github.event.pull_request.head.sha }}}}
