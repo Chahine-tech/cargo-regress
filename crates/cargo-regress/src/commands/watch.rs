@@ -21,6 +21,17 @@ struct WatchEntry {
 }
 
 pub fn run(args: &WatchArgs, repo: &Path) -> Result<()> {
+    if args.show {
+        let history_path = history_path(repo)?;
+        let history = load_history(&history_path)?;
+        if history.is_empty() {
+            eprintln!("No history yet. Run `cargo regress watch` to start recording.");
+        } else {
+            display_history(&history);
+        }
+        return Ok(());
+    }
+
     let sha = build::resolve_commit(repo, "HEAD")?;
     let branch = current_branch(repo).unwrap_or_else(|_| "HEAD".to_string());
 

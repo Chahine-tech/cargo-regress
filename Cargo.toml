@@ -28,5 +28,7 @@ serde_json = "1"
 anyhow = "1"
 thiserror = "2"
 toml = { version = "0.8", default-features = false, features = ["parse"] }
+ratatui = "0.30"
+crossterm = "0.28"
 regress-core = { path = "crates/regress-core" }
 regress-render = { path = "crates/regress-render" }

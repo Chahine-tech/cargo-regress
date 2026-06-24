@@ -213,14 +213,34 @@ cargo regress explain "serde_json::de::Deserialize<my_crate::User>"
 cargo regress watch
 cargo regress watch --bin my-service
 
-# Snapshot of current binary (coming in v0.5)
+# Display size history without building
+cargo regress watch --show
+
+# Snapshot of current binary: top crates by size with category
 cargo regress snapshot
+cargo regress snapshot --top 30
+
+# Interactive TUI for exploring regressions
+cargo regress tui
+cargo regress tui --from v1.0 --to v1.1
 ```
+
+`cargo regress tui` runs the same diff as the default command, then opens
+an interactive terminal UI. Left panel lists crates sorted by regression
+size; right panel shows the symbols for the selected crate with their
+category and confidence. Keybindings: `↑↓`/`jk` to navigate, `Tab` to
+switch panels, `/` to filter crates by name, `q` to quit.
 
 `cargo regress watch` builds HEAD in a clean worktree, appends
 `{sha, branch, timestamp, size_bytes}` to
 `~/.cargo/regress/watch/<repo>.jsonl`, and prints the last 10 entries
-with size deltas.
+with size deltas. `--show` displays the history without triggering a build.
+
+`cargo regress snapshot` analyses the current HEAD binary and displays
+all crates ranked by total symbol size, with bloat category when
+detectable. On Windows, MSVC release binaries must be built with
+`/debugtype:cv,pdata` to embed COFF symbols; GNU/MinGW toolchains work
+out of the box.
 
 ---
 
@@ -297,48 +317,6 @@ Each classification carries a confidence score. `[monomorphization]` is high-con
       --format github \
       --fail-on "+100kb" >> $GITHUB_STEP_SUMMARY
 ```
-
----
-
-## Roadmap
-
-### v0.1 — MVP ✓
-- [x] ELF / Mach-O / PE parsing via `object`
-- [x] Symbol diff: added, removed, grown, shrunk
-- [x] Grouping by crate (via rustc-demangle)
-- [x] Git worktree-based build orchestration
-- [x] Colored terminal output
-- [x] `--format json` and `--format github`
-- [x] `--fail-on` threshold with exit code 1
-- [x] Integration test fixtures (bloat-mono, bloat-derive, bloat-dep)
-
-### v0.2 — Causal attribution ✓
-- [x] `cargo_metadata` integration for full dependency graph
-- [x] `Cargo.lock` diff between two commits
-- [x] Symbol → crate → import chain attribution
-- [x] Detect expensive Cargo features enabled transitively
-
-### v0.3 — Classification & suggestions ✓
-- [x] Full monomorphization classifier (N-instantiation grouping)
-- [x] Hidden data classifier (`.rodata`, panic strings, vtables)
-- [x] Derive support code classifier
-- [x] Extensible suggestion rules (TOML, community-contributed)
-- [x] `cargo regress explain <symbol>`
-
-### v0.4 — CI & polish ✓
-- [x] `cargo regress watch` — local size history per branch
-- [x] GitHub Actions summary format with PR annotation support
-- [x] Publication on crates.io (metadata ready)
-
-### v0.5 — Polish & distribution (current)
-- [ ] Windows PE support (full)
-- [ ] `cargo regress snapshot` — current binary snapshot (like cargo-bloat)
-- [ ] `cargo regress watch --show` — display history without recording
-
-### Future
-- [ ] TUI (ratatui) for interactive symbol exploration
-- [ ] VS Code extension for inline regression display
-- [ ] Community database of expensive features per crate
 
 ---
 

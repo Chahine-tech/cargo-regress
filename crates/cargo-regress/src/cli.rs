@@ -22,6 +22,8 @@ pub enum Command {
         /// Demangled symbol name to explain
         symbol: String,
     },
+    /// Interactive TUI for exploring regressions
+    Tui,
     /// Record current binary size to local history and show trend
     Watch {
         #[command(flatten)]
@@ -29,10 +31,8 @@ pub enum Command {
     },
     /// Show a size snapshot of the current binary (like cargo-bloat)
     Snapshot {
-        #[arg(long)]
-        bin: Option<String>,
-        #[arg(long)]
-        lib: bool,
+        #[command(flatten)]
+        snapshot: SnapshotArgs,
     },
 }
 
@@ -45,6 +45,25 @@ pub struct WatchArgs {
     /// Record the library instead of a binary
     #[arg(long)]
     pub lib: bool,
+
+    /// Display history without building
+    #[arg(long)]
+    pub show: bool,
+}
+
+#[derive(Args, Clone)]
+pub struct SnapshotArgs {
+    /// Specific binary to analyse (workspace)
+    #[arg(long)]
+    pub bin: Option<String>,
+
+    /// Analyse the library instead of a binary
+    #[arg(long)]
+    pub lib: bool,
+
+    /// Number of top crates to display
+    #[arg(long, default_value_t = 20)]
+    pub top: usize,
 }
 
 #[derive(Args, Clone)]
