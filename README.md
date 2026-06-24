@@ -209,12 +209,18 @@ cargo regress --fail-on "+1mb"
 # Deep analysis of a specific symbol
 cargo regress explain "serde_json::de::Deserialize<my_crate::User>"
 
-# Snapshot of current binary (like cargo-bloat, with the 4 categories)
-cargo regress snapshot
-
-# Watch mode: record size at each build, keep local history
+# Record current HEAD binary size to local history, then show trend
 cargo regress watch
+cargo regress watch --bin my-service
+
+# Snapshot of current binary (coming in v0.5)
+cargo regress snapshot
 ```
+
+`cargo regress watch` builds HEAD in a clean worktree, appends
+`{sha, branch, timestamp, size_bytes}` to
+`~/.cargo/regress/watch/<repo>.jsonl`, and prints the last 10 entries
+with size deltas.
 
 ---
 
@@ -319,11 +325,15 @@ Each classification carries a confidence score. `[monomorphization]` is high-con
 - [x] Extensible suggestion rules (TOML, community-contributed)
 - [x] `cargo regress explain <symbol>`
 
-### v0.4 — CI & polish (current)
-- [ ] `cargo regress watch` — local size history per branch
-- [ ] GitHub Actions summary format with PR annotation support
+### v0.4 — CI & polish ✓
+- [x] `cargo regress watch` — local size history per branch
+- [x] GitHub Actions summary format with PR annotation support
+- [x] Publication on crates.io (metadata ready)
+
+### v0.5 — Polish & distribution (current)
 - [ ] Windows PE support (full)
-- [ ] Publication on crates.io
+- [ ] `cargo regress snapshot` — current binary snapshot (like cargo-bloat)
+- [ ] `cargo regress watch --show` — display history without recording
 
 ### Future
 - [ ] TUI (ratatui) for interactive symbol exploration
