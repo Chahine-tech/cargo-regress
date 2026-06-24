@@ -195,6 +195,7 @@ dependencies = [
  "regress-render",
  "serde",
  "serde_json",
+ "toml",
 ]
 
 [[package]]

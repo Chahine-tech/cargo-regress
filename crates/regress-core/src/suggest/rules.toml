@@ -14,3 +14,67 @@ suggestion = "Consider miniserde or nanoserde for simpler types to reduce monomo
 [[rule]]
 crate = "tokio"
 suggestion = 'Enable only needed features: tokio = { version = "...", features = ["rt", "net"] }'
+
+[[rule]]
+crate = "hyper"
+suggestion = 'Use hyper with only needed features: hyper = { version = "...", features = ["http1"] }'
+estimated_savings_bytes = 51200
+
+[[rule]]
+crate = "axum"
+suggestion = 'Disable default axum features and enable only what you use (e.g. no ws, multipart)'
+estimated_savings_bytes = 30720
+
+[[rule]]
+crate = "image"
+suggestion = 'Disable unused image format features: image = { version = "...", default-features = false, features = ["png"] }'
+estimated_savings_bytes = 204800
+
+[[rule]]
+crate = "openssl"
+suggestion = 'Consider switching to rustls to avoid OpenSSL linkage bloat'
+estimated_savings_bytes = 409600
+
+[[rule]]
+crate = "openssl-sys"
+suggestion = 'Consider switching to rustls to avoid OpenSSL linkage bloat'
+estimated_savings_bytes = 409600
+
+[[rule]]
+crate = "reqwest"
+suggestion = 'Use reqwest with rustls and disable default-tls: reqwest = { default-features = false, features = ["rustls-tls"] }'
+estimated_savings_bytes = 102400
+
+[[rule]]
+crate = "clap"
+suggestion = 'If only parsing simple args, consider pico-args or lexopt to reduce binary size by ~100 KB'
+estimated_savings_bytes = 102400
+
+[[rule]]
+crate = "tracing"
+suggestion = 'If you only need logging, consider using `log` + `env_logger` which are significantly smaller'
+estimated_savings_bytes = 20480
+
+[[rule]]
+crate = "tracing-subscriber"
+suggestion = 'Strip unused tracing-subscriber features: tracing-subscriber = { default-features = false, features = ["fmt"] }'
+estimated_savings_bytes = 40960
+
+[[rule]]
+crate = "chrono"
+suggestion = 'Disable unused chrono features: chrono = { default-features = false, features = ["std"] }'
+estimated_savings_bytes = 20480
+
+[[rule]]
+crate = "rayon"
+suggestion = 'Rayon adds thread pool overhead; only include if parallelism is measurably beneficial'
+
+[[rule]]
+crate = "diesel"
+suggestion = 'Enable only the database backend you use: diesel = { features = ["postgres"] } not all backends'
+estimated_savings_bytes = 307200
+
+[[rule]]
+crate = "sqlx"
+suggestion = 'Enable only the database runtime you use: sqlx = { features = ["runtime-tokio", "postgres"] }'
+estimated_savings_bytes = 204800

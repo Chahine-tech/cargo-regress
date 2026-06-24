@@ -32,6 +32,24 @@ pub fn run(args: &WatchArgs, repo: &Path) -> Result<()> {
         return Ok(());
     }
 
+    loop {
+        record_once(args, repo)?;
+
+        if args.interval == 0 {
+            break;
+        }
+
+        eprintln!(
+            "{}",
+            format!("⏱  Next build in {}s — Ctrl-C to stop.", args.interval).dimmed()
+        );
+        std::thread::sleep(std::time::Duration::from_secs(args.interval));
+    }
+
+    Ok(())
+}
+
+fn record_once(args: &WatchArgs, repo: &Path) -> Result<()> {
     let sha = build::resolve_commit(repo, "HEAD")?;
     let branch = current_branch(repo).unwrap_or_else(|_| "HEAD".to_string());
 

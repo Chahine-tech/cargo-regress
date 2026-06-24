@@ -133,4 +133,48 @@ mod tests {
     fn unknown_crate_has_no_suggestion() {
         assert!(for_crate("nonexistent_crate_xyz").is_empty());
     }
+
+    #[test]
+    fn new_crates_have_suggestions() {
+        for crate_name in &["hyper", "axum", "image", "reqwest", "openssl", "tracing", "chrono", "diesel", "sqlx"] {
+            let s = for_crate(crate_name);
+            assert!(!s.is_empty(), "Expected suggestion for crate `{crate_name}`");
+        }
+    }
+
+    #[test]
+    fn hyper_has_savings_estimate() {
+        let s = for_crate("hyper");
+        assert!(s[0].estimated_savings_bytes.is_some());
+    }
+
+    #[test]
+    fn image_has_large_savings_estimate() {
+        let s = for_crate("image");
+        assert!(s[0].estimated_savings_bytes.unwrap() >= 100_000);
+    }
+
+    #[test]
+    fn build_profile_no_suggestions_for_small_delta() {
+        let suggestions = for_build_profile(1_000, false, 1);
+        assert!(suggestions.is_empty());
+    }
+
+    #[test]
+    fn build_profile_panic_abort_for_large_delta() {
+        let suggestions = for_build_profile(60_000, false, 1);
+        assert!(suggestions.iter().any(|s| s.text.contains("panic")));
+    }
+
+    #[test]
+    fn build_profile_strip_for_hidden_data() {
+        let suggestions = for_build_profile(0, true, 0);
+        assert!(suggestions.iter().any(|s| s.text.contains("strip")));
+    }
+
+    #[test]
+    fn build_profile_lto_for_many_crates() {
+        let suggestions = for_build_profile(0, false, 5);
+        assert!(suggestions.iter().any(|s| s.text.contains("lto")));
+    }
 }

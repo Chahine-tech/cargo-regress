@@ -34,6 +34,63 @@ pub enum Command {
         #[command(flatten)]
         snapshot: SnapshotArgs,
     },
+    /// Scaffold .cargo-regress.toml and .github/workflows/binary-size.yml
+    Init {
+        #[command(flatten)]
+        init: InitArgs,
+    },
+    /// Save or compare a binary size baseline (no second commit needed)
+    Baseline {
+        #[command(subcommand)]
+        cmd: BaselineCmd,
+    },
+}
+
+#[derive(Subcommand, Clone)]
+pub enum BaselineCmd {
+    /// Save current binary size as baseline
+    Save {
+        /// Specific binary to save (workspace)
+        #[arg(long)]
+        bin: Option<String>,
+        /// Record the library instead of a binary
+        #[arg(long)]
+        lib: bool,
+    },
+    /// Compare current binary against saved baseline
+    Compare {
+        /// Specific binary to compare (workspace)
+        #[arg(long)]
+        bin: Option<String>,
+        /// Compare the library instead of a binary
+        #[arg(long)]
+        lib: bool,
+        /// Output format
+        #[arg(long, value_enum, default_value_t = OutputFormat::Terminal)]
+        format: OutputFormat,
+        /// Fail if regression exceeds threshold (e.g. +100kb)
+        #[arg(long)]
+        fail_on: Option<String>,
+    },
+}
+
+#[derive(Args, Clone)]
+pub struct InitArgs {
+    /// Binary name to use in generated config (auto-detected from Cargo.toml if omitted)
+    #[arg(long)]
+    pub bin: Option<String>,
+
+    /// Regression threshold in bytes written to config and workflow
+    #[arg(long, default_value_t = 10_000)]
+    pub fail_on: u64,
+
+    /// Skip generating the GitHub Actions workflow
+    #[arg(long)]
+    pub no_github: bool,
+
+    /// Overwrite files that already exist
+    #[arg(long)]
+    pub force: bool,
 }
 
 #[derive(Args, Clone)]
@@ -49,6 +106,10 @@ pub struct WatchArgs {
     /// Display history without building
     #[arg(long)]
     pub show: bool,
+
+    /// Rebuild automatically every N seconds (0 = run once)
+    #[arg(long, default_value_t = 0)]
+    pub interval: u64,
 }
 
 #[derive(Args, Clone)]
@@ -99,4 +160,10 @@ pub enum OutputFormat {
     Terminal,
     Json,
     Github,
+    /// SARIF 2.1.0 — upload to GitHub Code Scanning
+    Sarif,
+    /// GitLab Code Quality JSON — for MR integration
+    Gitlab,
+    /// Interactive HTML treemap
+    Html,
 }

@@ -1,6 +1,7 @@
 mod build;
 mod cli;
 mod commands;
+mod config;
 
 use anyhow::Result;
 use clap::Parser;
@@ -18,14 +19,20 @@ fn main() -> Result<()> {
         a
     };
 
-    let cli = Cli::parse_from(args);
+    let mut cli = Cli::parse_from(args);
     let repo = build::find_repo_root()?;
+
+    // Apply .cargo-regress.toml defaults (CLI flags take precedence)
+    let cfg = config::Config::load(&repo);
+    cfg.apply_to_diff(&mut cli.diff);
 
     match cli.command {
         Some(Command::Explain { symbol }) => commands::explain::run(&symbol, &cli.diff, &repo)?,
         Some(Command::Tui) => commands::tui::run(&cli.diff, &repo)?,
         Some(Command::Watch { watch }) => commands::watch::run(&watch, &repo)?,
         Some(Command::Snapshot { snapshot }) => commands::snapshot::run(&snapshot, &repo)?,
+        Some(Command::Init { init }) => commands::init::run(&init, &repo)?,
+        Some(Command::Baseline { cmd }) => commands::baseline::run(&cmd, &repo)?,
         None => commands::diff::run(&cli.diff, &repo)?,
     }
 

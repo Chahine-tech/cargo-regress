@@ -2,7 +2,7 @@ use std::path::Path;
 
 use anyhow::{Context, Result};
 use regress_core::{binary, causal, diff};
-use regress_render::{github, json, terminal};
+use regress_render::{github, gitlab, html, json, sarif, terminal};
 
 use crate::build;
 use crate::cli::{DiffArgs, OutputFormat};
@@ -40,6 +40,18 @@ pub fn run(args: &DiffArgs, repo: &Path) -> Result<()> {
         OutputFormat::Github => {
             let out = github::render(&binary_diff, &causal_entries, &args.from, &args.to);
             print!("{out}");
+        }
+        OutputFormat::Sarif => {
+            let out = sarif::render(&binary_diff, &causal_entries)?;
+            println!("{out}");
+        }
+        OutputFormat::Gitlab => {
+            let out = gitlab::render(&binary_diff, &causal_entries)?;
+            println!("{out}");
+        }
+        OutputFormat::Html => {
+            let out = html::render(&binary_diff, &causal_entries, &args.from, &args.to)?;
+            println!("{out}");
         }
     }
 

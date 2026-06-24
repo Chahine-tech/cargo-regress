@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>cargo-regress &mdash; Binary Size Report</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #0d1117; color: #e6edf3; }
+  header { padding: 1.5rem 2rem; border-bottom: 1px solid #30363d; }
+  h1 { font-size: 1.2rem; font-weight: 600; }
+  .meta { font-size: 0.85rem; color: #8b949e; margin-top: 0.25rem; }
+  .delta { font-weight: 700; }
+  .delta.grow { color: #f85149; }
+  .delta.shrink { color: #3fb950; }
+  #chart { width: 100%; height: calc(100vh - 120px); }
+  .tooltip {
+    position: absolute; pointer-events: none;
+    background: #161b22; border: 1px solid #30363d;
+    border-radius: 6px; padding: 0.75rem 1rem;
+    font-size: 0.8rem; max-width: 280px; line-height: 1.5;
+  }
+  .tooltip .crate { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.25rem; }
+  .tooltip .cat { color: #8b949e; }
+  rect { stroke: #0d1117; stroke-width: 1px; }
+  text { pointer-events: none; fill: #e6edf3; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Binary Size Regression Report</h1>
+  <div class="meta">
+    <code>__FROM__</code> &rarr; <code>__TO__</code> &nbsp;|&nbsp;
+    <span class="delta __CLS__">__SIGN____DELTA__ (__SIGN____PCT__%)</span>
+  </div>
+</header>
+<div id="chart"></div>
+<div class="tooltip" id="tooltip" style="display:none"></div>
+<script>
+const raw = __DATA_JSON__;
+
+const root = { name: "root", children: raw.map(c => ({
+  ...c,
+  value: c.delta,
+  children: c.children.map(s => ({ name: s.name, value: s.delta }))
+})) };
+
+const width = document.getElementById("chart").clientWidth;
+const height = document.getElementById("chart").clientHeight;
+
+const color = d3.scaleOrdinal()
+  .domain(["Monomorphization", "NewDependency", "VersionBump", "HiddenData", "SymbolGrowth", "Unknown"])
+  .range(["#f0883e", "#f85149", "#d29922", "#a371f7", "#58a6ff", "#8b949e"]);
+
+const hierarchy = d3.hierarchy(root)
+  .sum(d => Math.max(d.value || 0, 0))
+  .sort((a, b) => b.value - a.value);
+
+d3.treemap().size([width, height]).padding(2)(hierarchy);
+
+const svg = d3.select("#chart").append("svg")
+  .attr("width", width).attr("height", height);
+
+const tooltip = document.getElementById("tooltip");
+
+const leaf = svg.selectAll("g")
+  .data(hierarchy.leaves())
+  .join("g")
+  .attr("transform", d => `translate(${d.x0},${d.y0})`);
+
+leaf.append("rect")
+  .attr("width", d => d.x1 - d.x0)
+  .attr("height", d => d.y1 - d.y0)
+  .attr("fill", d => {
+    let node = d;
+    while (node.depth > 1) node = node.parent;
+    return color(node.data.category || "Unknown");
+  })
+  .attr("opacity", 0.85)
+  .on("mousemove", (event, d) => {
+    let crate = d.parent?.data;
+    const fmt = n => n >= 1048576 ? (n/1048576).toFixed(1)+" MB"
+                   : n >= 1024 ? (n/1024).toFixed(1)+" KB"
+                   : n+" B";
+    tooltip.style.display = "block";
+    tooltip.style.left = (event.pageX + 12) + "px";
+    tooltip.style.top  = (event.pageY + 12) + "px";
+    tooltip.innerHTML = crate
+      ? `<div class="crate">${crate.name}</div>
+         <div class="cat">${crate.category} &middot; ${crate.confidence}</div>
+         <div>+${fmt(crate.delta)}</div>
+         <div style="margin-top:0.4rem;color:#8b949e;font-size:0.75rem">${d.data.name}</div>`
+      : `<div class="crate">${d.data.name}</div><div>+${fmt(d.value)}</div>`;
+  })
+  .on("mouseleave", () => { tooltip.style.display = "none"; });
+
+leaf.append("text")
+  .attr("x", 4).attr("y", 14)
+  .attr("font-size", d => Math.min(13, Math.max(8, (d.x1-d.x0)/8)) + "px")
+  .text(d => d.x1 - d.x0 > 40 && d.y1 - d.y0 > 18 ? d.data.name : "");
+
+const crates = svg.selectAll(".clabel")
+  .data(hierarchy.children || [])
+  .join("text")
+  .attr("class", "clabel")
+  .attr("x", d => d.x0 + 4)
+  .attr("y", d => d.y0 + 14)
+  .attr("font-size", "11px")
+  .attr("font-weight", "600")
+  .attr("fill", "#e6edf3")
+  .text(d => d.x1 - d.x0 > 60 ? d.data.name : "");
+</script>
+</body>
+</html>
