@@ -289,6 +289,10 @@ Each classification carries a confidence score. `[monomorphization]` is high-con
         "Disable unicode feature: regex = { version = \"...\", default-features = false, features = [\"std\"] }"
       ]
     }
+  ],
+  "profile_suggestions": [
+    "[profile.release] panic = \"abort\"  — removes unwinding tables (~20–50 KB)",
+    "[profile.release] lto = \"thin\"  — enables cross-crate dead code elimination"
   ]
 }
 ```
