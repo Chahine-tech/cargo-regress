@@ -1,0 +1,62 @@
+name: cargo-regress
+description: Binary size regression analysis between two git commits
+author: Chahine Ben Lahcen
+
+branding:
+  icon: bar-chart-2
+  color: orange
+
+inputs:
+  from:
+    description: "Base commit, tag, or branch (default: PR base SHA)"
+    required: false
+    default: ""
+  to:
+    description: "Head commit, tag, or branch (default: PR head SHA)"
+    required: false
+    default: ""
+  bin:
+    description: "Specific binary to analyse (workspace)"
+    required: false
+    default: ""
+  fail-on:
+    description: "Fail with exit code 1 if regression exceeds threshold (e.g. +100kb, +1mb)"
+    required: false
+    default: ""
+  format:
+    description: "Output format — terminal, json, or github"
+    required: false
+    default: github
+
+runs:
+  using: composite
+  steps:
+    - name: Install cargo-regress
+      shell: bash
+      run: |
+        if ! command -v cargo-regress &>/dev/null; then
+          cargo install cargo-regress --locked
+        fi
+
+    - name: Run cargo-regress
+      shell: bash
+      run: |
+        FROM="${{ inputs.from }}"
+        TO="${{ inputs.to }}"
+        BIN="${{ inputs.bin }}"
+        FAIL_ON="${{ inputs.fail-on }}"
+        FORMAT="${{ inputs.format }}"
+
+        # Default to PR base/head when running in a pull_request context
+        if [ -z "$FROM" ]; then
+          FROM="${GITHUB_BASE_REF:-HEAD~1}"
+        fi
+        if [ -z "$TO" ]; then
+          TO="${GITHUB_SHA:-HEAD}"
+        fi
+
+        ARGS="--from $FROM --to $TO --format $FORMAT"
+        [ -n "$BIN" ]     && ARGS="$ARGS --bin $BIN"
+        [ -n "$FAIL_ON" ] && ARGS="$ARGS --fail-on $FAIL_ON"
+
+        cargo regress $ARGS | tee -a "$GITHUB_STEP_SUMMARY"

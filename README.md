@@ -308,12 +308,39 @@ Each classification carries a confidence score. `[monomorphization]` is high-con
 | Regression above `--fail-on` threshold | `1` |
 | Build or analysis error | `2` (anyhow propagation) |
 
-### GitHub Actions example
+### GitHub Actions — official action
+
+```yaml
+# .github/workflows/binary-size.yml
+name: Binary Size Regression
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  size-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: Chahine-tech/cargo-regress@main
+        with:
+          from: ${{ github.event.pull_request.base.sha }}
+          to: ${{ github.event.pull_request.head.sha }}
+          fail-on: "+500kb"
+```
+
+The action posts a Markdown summary to the PR via `$GITHUB_STEP_SUMMARY` and exits with code 1 if the regression exceeds `fail-on`.
+
+### GitHub Actions — manual install
 
 ```yaml
 - name: Check binary size regression
   run: |
-    cargo install cargo-regress
+    cargo install cargo-regress --locked
     cargo regress \
       --from ${{ github.event.pull_request.base.sha }} \
       --to ${{ github.event.pull_request.head.sha }} \

@@ -1,0 +1,23 @@
+name: Binary Size Regression
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  size-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: Chahine-tech/cargo-regress@main
+        with:
+          from: ${{ github.event.pull_request.base.sha }}
+          to: ${{ github.event.pull_request.head.sha }}
+          fail-on: "+500kb"
