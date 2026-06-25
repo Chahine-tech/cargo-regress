@@ -161,7 +161,7 @@ Worktrees are used instead of checkout/stash — your working directory is never
 cargo install cargo-regress
 ```
 
-Requires Rust 1.85+ (edition 2024). Works on Linux (ELF), macOS (Mach-O), and Windows (PE).
+Requires Rust 1.85+ (edition 2024). Works on Linux (ELF) and macOS (Mach-O). Windows support is **experimental** — see [Windows](#windows-experimental) below.
 
 ---
 
@@ -297,9 +297,7 @@ with size deltas. `--show` displays the history without triggering a build.
 
 `cargo regress snapshot` analyses the current HEAD binary and displays
 all crates ranked by total symbol size, with bloat category when
-detectable. On Windows, MSVC release binaries must be built with
-`/debugtype:cv,pdata` to embed COFF symbols; GNU/MinGW toolchains work
-out of the box.
+detectable.
 
 ---
 
@@ -448,6 +446,33 @@ binary-size:
       --to ${{ github.event.pull_request.head.sha }} \
       --format github \
       --fail-on "+100kb" >> $GITHUB_STEP_SUMMARY
+```
+
+---
+
+## Windows (experimental)
+
+Windows PE/COFF support is **experimental**. The `object` crate can parse PE binaries, but symbol availability depends heavily on the toolchain and build flags.
+
+| Toolchain | Status | Notes |
+|-----------|--------|-------|
+| GNU/MinGW (`x86_64-pc-windows-gnu`) | ✅ Works | Symbols embedded in binary by default |
+| MSVC debug builds | ✅ Works | COFF symbols present |
+| MSVC release builds | ⚠️ Partial | Symbols stripped to `.pdb` by default — rebuild with `/debugtype:cv,pdata` to embed them |
+| MSVC + LTO | ❌ No symbols | Symbols are fully stripped; no workaround |
+
+If `cargo regress` reports an empty diff or no regressions on Windows, it likely means the binary has no embedded symbols. The tool will print a warning:
+
+```
+⚠ No symbols found in PE binary. MSVC release builds strip COFF symbols by default.
+  Rebuild with /debugtype:cv,pdata or use the GNU/MinGW toolchain for embedded symbols.
+```
+
+For full analysis on Windows, use the MinGW toolchain or add to `.cargo/config.toml`:
+
+```toml
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "link-arg=/debugtype:cv,pdata"]
 ```
 
 ---
