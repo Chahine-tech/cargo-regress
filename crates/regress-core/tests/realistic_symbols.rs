@@ -93,9 +93,7 @@ fn serde_json_deserializer_monomorph_detected() {
         "expected monomorphization group for serde_json Deserializer"
     );
     assert!(
-        groups[0]
-            .base_name
-            .contains("serde_json::de::Deserializer"),
+        groups[0].base_name.contains("serde_json::de::Deserializer"),
         "base_name should be stripped: got {}",
         groups[0].base_name
     );
@@ -105,7 +103,12 @@ fn serde_json_deserializer_monomorph_detected() {
 /// tokio::sync::Mutex instantiated over various protected types.
 #[test]
 fn tokio_mutex_monomorph_detected() {
-    let types = ["Vec<u8>", "HashMap<String, u64>", "Option<Connection>", "Cache"];
+    let types = [
+        "Vec<u8>",
+        "HashMap<String, u64>",
+        "Option<Connection>",
+        "Cache",
+    ];
     let syms: Vec<SymbolDiff> = types
         .iter()
         .map(|ty| sym_diff(&format!("tokio::sync::Mutex<{ty}>::lock"), 1024))
@@ -166,7 +169,10 @@ fn pipeline_handles_large_realistic_diff() {
     let from: Vec<SymbolEntry> = (0..N)
         .map(|i| {
             let krate = crates[i % crates.len()];
-            entry(&format!("{krate}::mod{}::fn{}", i / crates.len(), i), (i as u64 % 1024) + 128)
+            entry(
+                &format!("{krate}::mod{}::fn{}", i / crates.len(), i),
+                (i as u64 % 1024) + 128,
+            )
         })
         .collect();
 

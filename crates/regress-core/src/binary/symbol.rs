@@ -38,6 +38,6 @@ pub(crate) fn crate_from_demangled(demangled: &str) -> &str {
     let s = demangled.trim_start_matches('<');
     // Stop at `<` (generic params) or ` ` (`Vec<u8> as Trait` pattern) before
     // splitting on `::`, so we don't bleed into the trait path.
-    let end = s.find(|c: char| c == '<' || c == ' ').unwrap_or(s.len());
+    let end = s.find(['<', ' ']).unwrap_or(s.len());
     s[..end].split("::").next().unwrap_or("unknown")
 }

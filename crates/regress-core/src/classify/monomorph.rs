@@ -115,9 +115,18 @@ mod tests {
     fn hash_suffix_stripped_so_same_generic_fn_grouped() {
         // Two instantiations of the same function differ only by hash — must group.
         let syms = vec![
-            sym("grep_searcher::core::Core<M,S>::match_by_line::h2842b1982221f489", 50_000),
-            sym("grep_searcher::core::Core<M,S>::match_by_line::hd397985c3d341c4f", 50_000),
-            sym("grep_searcher::core::Core<M,S>::match_by_line::h604cba8603f3f0a0", 50_000),
+            sym(
+                "grep_searcher::core::Core<M,S>::match_by_line::h2842b1982221f489",
+                50_000,
+            ),
+            sym(
+                "grep_searcher::core::Core<M,S>::match_by_line::hd397985c3d341c4f",
+                50_000,
+            ),
+            sym(
+                "grep_searcher::core::Core<M,S>::match_by_line::h604cba8603f3f0a0",
+                50_000,
+            ),
         ];
         let groups = detect(&syms);
         assert_eq!(groups.len(), 1);
@@ -132,7 +141,10 @@ mod tests {
         let syms: Vec<SymbolDiff> = (0..10)
             .map(|i| {
                 sym(
-                    &format!("<Type{i} as SomeTrait>::update::h{:016x}", i as u64 * 0x111111111111u64),
+                    &format!(
+                        "<Type{i} as SomeTrait>::update::h{:016x}",
+                        i as u64 * 0x111111111111u64
+                    ),
                     5_000,
                 )
             })
@@ -158,10 +170,7 @@ mod tests {
 
     #[test]
     fn strip_hash_suffix_removes_exactly_16_hex_chars() {
-        assert_eq!(
-            strip_hash_suffix("foo::bar::h0123456789abcdef"),
-            "foo::bar"
-        );
+        assert_eq!(strip_hash_suffix("foo::bar::h0123456789abcdef"), "foo::bar");
         // 15 hex chars — not a valid hash, preserved
         assert_eq!(
             strip_hash_suffix("foo::bar::h0123456789abcde"),

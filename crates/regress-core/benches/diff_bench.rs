@@ -66,9 +66,13 @@ fn bench_compute_diff(c: &mut Criterion) {
     for &size in &[1_000usize, 5_000, 10_000, 20_000] {
         let from = make_symbols(size);
         let to = make_regression(&from, 10);
-        group.bench_with_input(BenchmarkId::from_parameter(size), &(from, to), |b, (f, t)| {
-            b.iter(|| compute_diff(black_box(f), black_box(t)));
-        });
+        group.bench_with_input(
+            BenchmarkId::from_parameter(size),
+            &(from, to),
+            |b, (f, t)| {
+                b.iter(|| compute_diff(black_box(f), black_box(t)));
+            },
+        );
     }
     group.finish();
 }
@@ -93,7 +97,13 @@ fn bench_group_by_crate(c: &mut Criterion) {
 
 fn bench_detect_monomorph(c: &mut Criterion) {
     // Multiple instantiations of the same generic function (serde-like pattern)
-    let types = ["Vec<u8>", "String", "BufReader<File>", "&[u8]", "Cursor<Vec<u8>>"];
+    let types = [
+        "Vec<u8>",
+        "String",
+        "BufReader<File>",
+        "&[u8]",
+        "Cursor<Vec<u8>>",
+    ];
     let syms: Vec<SymbolDiff> = (0..200)
         .flat_map(|fn_idx| {
             types.iter().map(move |ty| {
@@ -115,5 +125,10 @@ fn bench_detect_monomorph(c: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, bench_compute_diff, bench_group_by_crate, bench_detect_monomorph);
+criterion_group!(
+    benches,
+    bench_compute_diff,
+    bench_group_by_crate,
+    bench_detect_monomorph
+);
 criterion_main!(benches);
