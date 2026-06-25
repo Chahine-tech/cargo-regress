@@ -137,6 +137,16 @@ pub struct DiffArgs {
     #[arg(long, default_value = "HEAD")]
     pub to: String,
 
+    /// Path to a pre-built binary — skips git checkout and cargo build.
+    /// Must be paired with --file-to.
+    #[arg(long, value_name = "PATH")]
+    pub file_from: Option<std::path::PathBuf>,
+
+    /// Path to a pre-built binary — skips git checkout and cargo build.
+    /// Must be paired with --file-from.
+    #[arg(long, value_name = "PATH")]
+    pub file_to: Option<std::path::PathBuf>,
+
     /// Specific binary to analyse (workspace)
     #[arg(long)]
     pub bin: Option<String>,

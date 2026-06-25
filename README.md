@@ -188,6 +188,14 @@ cargo regress --bin my-service
 cargo regress --bin cli-tool --from v2.0 --to v2.1
 ```
 
+### Compare two pre-built binaries (no git required)
+
+```bash
+cargo regress --file-from ./old/my-service --file-to ./new/my-service
+```
+
+Useful for cross-compilation (comparing macOS vs Linux builds), CI artefact comparison, or any workflow where the binaries are already on disk. All output formats and `--fail-on` work the same way — only causal attribution is skipped since there is no `Cargo.lock` diff.
+
 ### CI / machine-readable output
 
 ```bash

@@ -71,6 +71,8 @@ mod tests {
         DiffArgs {
             from: "HEAD~1".to_string(),
             to: "HEAD".to_string(),
+            file_from: None,
+            file_to: None,
             bin: None,
             lib: false,
             format: OutputFormat::Terminal,

@@ -20,7 +20,15 @@ fn main() -> Result<()> {
     };
 
     let mut cli = Cli::parse_from(args);
-    let repo = build::find_repo_root()?;
+
+    // In file mode (--file-from / --file-to) we don't need a git repo.
+    let repo = if cli.diff.file_from.is_some() || cli.diff.file_to.is_some() {
+        build::find_repo_root().unwrap_or_else(|_| {
+            std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."))
+        })
+    } else {
+        build::find_repo_root()?
+    };
 
     // Apply .cargo-regress.toml defaults (CLI flags take precedence)
     let cfg = config::Config::load(&repo);
